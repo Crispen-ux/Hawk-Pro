@@ -65,3 +65,7 @@ Server-side relative imports include their `.ts` extensions so Node.js 24 can lo
 A `FUNCTION_INVOCATION_FAILED` response means a function failed before it returned a normal application response. After updating the code, redeploy and verify `/api/account` returns 401 for a signed-out browser, then test password → emailed OTP → verified session. Database and email environment variables must be configured on that deployment. Failed OTP delivery returns a readable 503 response and removes the undelivered challenge so it does not leave a resend cooldown behind.
 
 The root TypeScript configuration is also used by the Vercel function builder. It explicitly emits ES modules and enables `rewriteRelativeImportExtensions` so packaged `.js` files import other `.js` files. Project references alone do not pass the API compiler options to that builder.
+
+## Batch product images
+
+The product editor accepts multiple image files at once through the file picker or drag-and-drop area. The existing limit remains eight images per product and 4 MB per JPEG, PNG or WebP file. A sequential queue keeps gallery order stable, reports each result, retains successful uploads and allows failed uploads to be retried individually. The product cannot be saved while a batch is running. Save changes after upload to persist the gallery. Each file uses the existing authenticated /api/upload endpoint and its server-side validation.

@@ -1,3 +1,4 @@
+import ProductImageUploader from "../product-image-uploader";
 import ProductDetailsFields from "../product-details-fields";
 import {
   DEFAULT_PRODUCT_DETAILS,
@@ -148,6 +149,7 @@ export default function AdminProductEditor() {
   }, [form, id, isNew]);
 
   const addImage = () => {
+    if (uploading || saving) return;
     const url = newImage.trim();
     if (!url) return;
     const parsed = z.string().url("Enter a valid image URL").safeParse(url);
@@ -175,6 +177,7 @@ export default function AdminProductEditor() {
   };
 
   const onSubmit = async (values: FormValues) => {
+    if (uploading || saving) return;
     setSaving(true);
     setError("");
     try {
@@ -396,50 +399,19 @@ export default function AdminProductEditor() {
                 </span>
               </div>
 
-              <label className="block text-sm space-y-2">
-                <span>
-                  {uploading
-                    ? "Uploading image…"
-                    : "Upload product image (JPEG, PNG or WebP, up to 4 MB)"}
-                </span>
-                <Input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  disabled={uploading || images.length >= 8}
-                  onChange={async (event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                    if (file.size > 4 * 1024 * 1024) {
-                      toast.error("Maximum image size is 4 MB");
-                      return;
-                    }
-                    setUploading(true);
-                    try {
-                      const response = await fetch("/api/upload", {
-                        method: "POST",
-                        headers: { "Content-Type": file.type },
-                        body: file,
-                      });
-                      const result = await response.json();
-                      if (!response.ok)
-                        throw new Error(result.error || "Upload failed");
-                      form.setValue(
-                        "images",
-                        [...form.getValues("images"), result.url],
-                        { shouldDirty: true, shouldValidate: true },
-                      );
-                      toast.success("Image uploaded");
-                    } catch (e) {
-                      toast.error(
-                        e instanceof Error ? e.message : "Upload failed",
-                      );
-                    } finally {
-                      setUploading(false);
-                      event.target.value = "";
-                    }
-                  }}
-                />
-              </label>
+              <ProductImageUploader
+                key={id}
+                remaining={8 - images.length}
+                disabled={saving || (!isNew && product?.id !== id)}
+                onBusyChange={setUploading}
+                onUploaded={(urls) =>
+                  form.setValue(
+                    "images",
+                    [...form.getValues("images"), ...urls],
+                    { shouldDirty: true, shouldValidate: true },
+                  )
+                }
+              />
               {images.length > 0 && (
                 <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
                   {images.map((src, i) => (
@@ -454,6 +426,7 @@ export default function AdminProductEditor() {
                         size="icon"
                         variant="secondary"
                         className="absolute -right-2 -top-2 size-6 rounded-full"
+                        disabled={uploading || saving}
                         aria-label={`Remove image ${i + 1}`}
                         onClick={() => removeImage(i)}
                       >
@@ -466,6 +439,7 @@ export default function AdminProductEditor() {
 
               <div className="flex gap-2">
                 <Input
+                  disabled={uploading || saving}
                   value={newImage}
                   onChange={(e) => setNewImage(e.target.value)}
                   placeholder="https://…/product-photo.jpg"
@@ -481,7 +455,7 @@ export default function AdminProductEditor() {
                   type="button"
                   variant="secondary"
                   onClick={addImage}
-                  disabled={images.length >= 8}
+                  disabled={uploading || saving || images.length >= 8}
                 >
                   <ImagePlusIcon /> Add
                 </Button>
@@ -604,14 +578,14 @@ export default function AdminProductEditor() {
             </section>
 
             <div className="flex flex-col gap-2">
-              <Button type="submit" size="lg" disabled={saving}>
+              <Button type="submit" size="lg" disabled={saving || uploading}>
                 {saving ? "Saving…" : isNew ? "Create product" : "Save changes"}
               </Button>
               <Button
                 type="button"
                 variant="secondary"
                 onClick={() => navigate("/admin/products")}
-                disabled={saving}
+                disabled={saving || uploading}
               >
                 Cancel
               </Button>
