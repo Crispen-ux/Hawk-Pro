@@ -2,6 +2,7 @@ import { z } from "zod";
 const measure = z.number().positive().max(10000).nullable().default(null);
 export const productDetailsSchema = z
   .object({
+    imageDisplayScale: z.number().int().min(25).max(100).default(100),
     sku: z.string().trim().max(80).default(""),
     soldAs: z
       .enum(["unspecified", "single", "pair", "set"])

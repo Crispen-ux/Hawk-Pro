@@ -1,3 +1,4 @@
+import ProductImageScale from "../product-image-scale";
 import ProductImageUploader from "../product-image-uploader";
 import ProductDetailsFields from "../product-details-fields";
 import {
@@ -460,6 +461,18 @@ export default function AdminProductEditor() {
                   <ImagePlusIcon /> Add
                 </Button>
               </div>
+              <ProductImageScale
+                src={images[0]}
+                name={name || ""}
+                value={details.imageDisplayScale ?? 100}
+                disabled={saving}
+                onChange={(value) =>
+                  form.setValue("details.imageDisplayScale", value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              />
               {form.formState.errors.images && (
                 <p className="text-sm text-destructive">
                   {form.formState.errors.images.message}

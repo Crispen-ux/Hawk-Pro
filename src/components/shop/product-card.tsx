@@ -1,3 +1,4 @@
+import ProductCardImage from "./product-card-image";
 import { Link } from "react-router-dom";
 import { ShoppingCartIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -17,11 +18,10 @@ export default function ProductCard({ product }: { product: Product }) {
         className="relative block aspect-[4/3] overflow-hidden bg-muted"
         aria-label={`View ${product.name}`}
       >
-        <img
+        <ProductCardImage
           src={product.images[0]}
           alt={product.name}
-          loading="lazy"
-          className="absolute inset-0 size-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02] sm:p-6"
+          scale={product.details?.imageDisplayScale ?? 100}
         />
         <span className="absolute left-3 top-3 bg-background/90 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider">
           {AVAILABILITY_LABEL[product.availability]}
