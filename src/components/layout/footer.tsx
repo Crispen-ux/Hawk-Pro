@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { SOCIAL_LINKS } from "@/data/site.ts";
+
 import { useSiteSettings } from "@/hooks/use-settings.tsx";
 import Logo from "./logo.tsx";
 
@@ -43,13 +43,27 @@ export default function Footer() {
         <div className="space-y-4 lg:col-span-2">
           <Logo className="h-16" />
           <p className="max-w-xs text-sm text-muted-foreground">
-            Speakers, subwoofers and professional audio. Rentals and repairs.
+            {settings.store.tagline}
           </p>
           <ul className="space-y-1 text-sm text-muted-foreground">
-            <li>{contact.email}</li>
-            <li>{contact.phone}</li>
-            <li>{contact.address}</li>
-            <li>{contact.hours}</li>
+            <li>
+              <a
+                href={"mailto:" + contact.email}
+                className="hover:text-primary"
+              >
+                {contact.email}
+              </a>
+            </li>
+            <li>
+              <a
+                href={"tel:" + contact.phone.replace(/[^+0-9]/g, "")}
+                className="hover:text-primary"
+              >
+                {contact.phone}
+              </a>
+            </li>
+            <li className="whitespace-pre-line">{contact.address}</li>
+            <li className="whitespace-pre-line">{contact.hours}</li>
           </ul>
         </div>
         {COLUMNS.map((col) => (
@@ -74,14 +88,13 @@ export default function Footer() {
       </div>
       <div className="border-t">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-muted-foreground sm:flex-row lg:px-8">
-          <p>&copy; {new Date().getFullYear()} HAWK. All rights reserved.</p>
-          <ul className="flex gap-4" aria-label="Social media (placeholders)">
-            {SOCIAL_LINKS.map((s) => (
-              <li key={s}>
-                <span className="cursor-default">{s}</span>
-              </li>
-            ))}
-          </ul>
+          <p>
+            &copy; {new Date().getFullYear()} {settings.store.name}. All rights
+            reserved.
+          </p>
+          <Link to="/account" className="hover:text-primary">
+            Customer account
+          </Link>
         </div>
       </div>
     </footer>

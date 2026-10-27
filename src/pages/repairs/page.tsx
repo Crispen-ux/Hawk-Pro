@@ -1,3 +1,4 @@
+import StoreContact from "@/components/layout/store-contact";
 import RepairForm from "./_components/repair-form.tsx";
 import { IMAGES, unsplash } from "@/data/site.ts";
 
@@ -36,6 +37,7 @@ export default function RepairsPage() {
             Describe the fault and we'll assess it. Turnaround times and costs
             are provided after assessment.
           </p>
+          <StoreContact />
         </div>
         <RepairForm />
       </section>

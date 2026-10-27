@@ -1,138 +1,140 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Link } from "react-router-dom";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button.tsx";
-import { Form } from "@/components/ui/form.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import TextField from "@/components/forms/text-field.tsx";
-import { useSiteSettings } from "@/hooks/use-settings.tsx";
-import {
-  settingsSchema,
-  type SettingsInput,
-} from "../../../../db/validation.ts";
-import { saveSettings } from "@/lib/api.ts";
-
+import { Save, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Form } from "@/components/ui/form";
+import { useSiteSettings } from "@/hooks/use-settings";
+import { settingsSchema, type SettingsInput } from "../../../../db/validation";
+import { saveSettings } from "@/lib/api";
+import { StoreFields } from "./store-fields";
+import StorePreview from "./store-preview";
 export default function AdminSettings() {
-  const { settings, apply } = useSiteSettings();
+  const {
+    settings,
+    ready,
+    error: loadError,
+    refresh,
+    apply,
+  } = useSiteSettings();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
   const form = useForm<SettingsInput>({
-    resolver: zodResolver(settingsSchema),
+    resolver: zodResolver(settingsSchema) as Resolver<SettingsInput>,
     defaultValues: settings,
   });
-
-  // Prefill once the provider has read the stored values, but never over a
-  // form the admin has already started editing.
   useEffect(() => {
-    if (form.formState.isDirty) return;
-    form.reset(settings);
+    if (!form.formState.isDirty) form.reset(settings);
   }, [form, settings]);
-
-  const onSubmit = async (values: SettingsInput) => {
+  const preview = form.watch();
+  async function onSubmit(values: SettingsInput) {
     setSaving(true);
     setError("");
     try {
       const saved = await saveSettings(values);
       apply(saved);
-      toast.success("Site settings saved");
+      form.reset(saved);
+      toast.success("Store details updated on the storefront");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not save the settings");
+      setError(e instanceof Error ? e.message : "Settings could not be saved");
     } finally {
       setSaving(false);
     }
-  };
-
+  }
+  if (!ready)
+    return (
+      <p className="p-8" role="status">
+        Loading your store settings…
+      </p>
+    );
+  if (loadError)
+    return (
+      <div className="m-8 admin-panel space-y-4" role="alert">
+        <h1>Store settings unavailable</h1>
+        <p>{loadError}</p>
+        <Button onClick={refresh}>Retry loading settings</Button>
+      </div>
+    );
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-10 lg:px-8">
-      <header className="space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.4em] text-primary">
-          Site
-        </p>
-        <h1 className="font-serif text-5xl font-extrabold uppercase leading-none">
-          Settings
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          The announcement banner and the contact details in the footer read
-          from these values.
-        </p>
+    <div className="max-w-7xl mx-auto p-5 lg:p-9 space-y-7">
+      <header className="flex flex-wrap gap-4 justify-between items-end">
+        <div>
+          <p className="text-xs uppercase tracking-[.3em] text-primary mb-2">
+            Your store / Configuration
+          </p>
+          <h1>Store settings</h1>
+          <p className="text-muted-foreground mt-3">
+            Manage the details your customers see, in one place.
+          </p>
+        </div>
+        <Button asChild variant="outline">
+          <Link to="/admin/onboarding">
+            {settings.onboardingCompleted
+              ? "Review store setup"
+              : "Continue store setup"}
+            <ArrowRight size={16} />
+          </Link>
+        </Button>
       </header>
-
-      {error && (
-        <Alert variant="destructive" role="alert">
-          <AlertTitle>Settings not saved</AlertTitle>
-          <AlertDescription className="flex flex-wrap items-center gap-3">
-            {error}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6"
-          noValidate
-        >
-          <section className="space-y-5 border bg-card p-5">
-            <h2 className="font-serif text-xl font-bold uppercase tracking-wide">
-              Announcement banner
-            </h2>
-            <TextField
-              control={form.control}
-              name="announcement"
-              label="Banner text"
-              placeholder="Engineered for Sound. Built for Performance."
-              hint="Shown at the top of every page, up to 160 characters."
-            />
-          </section>
-
-          <section className="space-y-5 border bg-card p-5">
-            <h2 className="font-serif text-xl font-bold uppercase tracking-wide">
-              Contact details
-            </h2>
-            <div className="grid gap-5 sm:grid-cols-2">
-              <TextField
-                control={form.control}
-                name="contact.email"
-                label="Email"
-                type="email"
-                placeholder="hello@hawk.co.za"
-              />
-              <TextField
-                control={form.control}
-                name="contact.phone"
-                label="Phone"
-                type="tel"
-                placeholder="+27 (0)11 000 0000"
-              />
-            </div>
-            <TextField
-              control={form.control}
-              name="contact.address"
-              label="Address"
-              placeholder="Street, suburb, city"
-            />
-            <TextField
-              control={form.control}
-              name="contact.hours"
-              label="Trading hours"
-              placeholder="Mon–Fri 08:00–17:00"
-            />
-          </section>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" size="lg" disabled={saving}>
-              {saving ? "Saving…" : "Save settings"}
-            </Button>
-            {form.formState.isDirty && (
-              <span className="text-sm text-muted-foreground">
-                Unsaved changes
-              </span>
+      <div className="grid lg:grid-cols-[1.5fr_1fr] gap-7 items-start">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            noValidate
+            className="space-y-6"
+          >
+            {error && (
+              <p
+                role="alert"
+                className="border border-destructive p-4 text-destructive"
+              >
+                {error}
+              </p>
             )}
+            {(
+              [
+                ["identity", "Store identity"],
+                ["contact", "Contact & location"],
+                ["hours", "Trading hours & announcement"],
+              ] as const
+            ).map(([section, title], index) => (
+              <section className="admin-panel space-y-5" key={section}>
+                <div className="flex gap-3 items-center border-b pb-4">
+                  <span className="text-primary font-mono text-xs">
+                    0{index + 1}
+                  </span>
+                  <h2>{title}</h2>
+                </div>
+                <StoreFields control={form.control} section={section} />
+              </section>
+            ))}
+            <div className="flex flex-wrap items-center gap-4">
+              <Button type="submit" size="lg" disabled={saving}>
+                <Save size={16} />
+                {saving ? "Saving…" : "Save store settings"}
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {form.formState.isDirty
+                  ? "You have unsaved changes"
+                  : "All changes saved"}
+              </span>
+            </div>
+          </form>
+        </Form>
+        <aside className="space-y-4 lg:sticky lg:top-6">
+          <StorePreview settings={preview} />
+          <div className="flex gap-3 text-sm text-muted-foreground p-4 border">
+            <CheckCircle2 className="size-5 shrink-0 text-primary" />
+            <p>
+              Saved changes update the storefront announcement, contact
+              information, and footer. Open storefront tabs refresh when
+              focused.
+            </p>
           </div>
-        </form>
-      </Form>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -23,6 +23,7 @@ import AdminProducts from "./pages/admin/products/page.tsx";
 import AdminProductEditor from "./pages/admin/products/[id]/page.tsx";
 import AdminEnquiries from "./pages/admin/enquiries/page.tsx";
 import AdminSettings from "./pages/admin/settings/page.tsx";
+import StoreOnboarding from "./pages/admin/onboarding/page";
 
 const CommercePage = lazy(() => import("./pages/admin/commerce-page"));
 import AccountAccess from "./pages/auth/AccountAccess";
@@ -83,6 +84,7 @@ export default function App() {
               <Route path="products/:id" element={<AdminProductEditor />} />
               <Route path="enquiries" element={<AdminEnquiries />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="onboarding" element={<StoreOnboarding />} />
               <Route path="orders" element={<CommercePage kind="orders" />} />
               <Route
                 path="inventory"

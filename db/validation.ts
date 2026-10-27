@@ -109,16 +109,52 @@ export const contactSchema = z.object({
   email: z.string().trim().email("Enter a valid email").max(160),
   phone: z.string().trim().min(6).max(60),
   address: z.string().trim().min(3).max(200),
-  hours: z.string().trim().min(3).max(200),
+  hours: z.string().trim().min(3).max(1000),
 });
 
-export const settingsSchema = z.object({
-  announcement: announcementSchema.shape.announcement,
-  contact: contactSchema,
+const CONTACT_DEFAULTS = {
+  email: "hello@your-domain.co.za",
+  phone: "+27 (0)00 000 0000",
+  address: "Business address to be confirmed",
+  hours: "Trading hours to be confirmed",
+};
+export const storeSchema = z.object({
+  name: z.string().trim().min(2, "Enter your store name").max(80),
+  tagline: z.string().trim().min(3, "Enter a store tagline").max(200),
 });
+export const settingsSchema = z
+  .object({
+    announcement: announcementSchema.shape.announcement,
+    contact: contactSchema,
+    store: storeSchema.default({
+      name: "HAWK",
+      tagline:
+        "Speakers, subwoofers and professional audio. Rentals and repairs.",
+    }),
+    onboardingCompleted: z.boolean().default(false),
+    onboardingStep: z.number().int().min(0).max(3).default(0),
+  })
+  .superRefine((value, ctx) => {
+    if (!value.onboardingCompleted) return;
+    for (const key of ["email", "phone", "address", "hours"] as const) {
+      if (value.contact[key] === CONTACT_DEFAULTS[key])
+        ctx.addIssue({
+          code: "custom",
+          path: ["contact", key],
+          message: "Replace the placeholder with your store's actual details",
+        });
+    }
+  });
 export type SettingsInput = z.infer<typeof settingsSchema>;
 
 export const DEFAULT_SETTINGS: SettingsInput = {
+  store: {
+    name: "HAWK",
+    tagline:
+      "Speakers, subwoofers and professional audio. Rentals and repairs.",
+  },
+  onboardingCompleted: false,
+  onboardingStep: 0,
   announcement: "Engineered for Sound. Built for Performance.",
   contact: {
     email: "hello@your-domain.co.za",
@@ -142,6 +178,11 @@ export function normaliseSettings(raw: unknown): SettingsInput {
       ? (obj.contact as Record<string, unknown>)
       : {};
   return {
+    store: storeSchema.safeParse(obj.store).success
+      ? storeSchema.parse(obj.store)
+      : DEFAULT_SETTINGS.store,
+    onboardingCompleted: false,
+    onboardingStep: 0,
     announcement:
       typeof obj.announcement === "string"
         ? obj.announcement

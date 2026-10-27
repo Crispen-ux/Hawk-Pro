@@ -1,8 +1,7 @@
 // Central site config: edit copy, navigation and contact placeholders here.
 export const ANNOUNCEMENT = "Engineered for Sound. Built for Performance.";
 
-export const LOGO_URL =
-  "https://hercules-cdn.com/file_JtzsppMCGnREfzpiDm2tmZiA";
+export const LOGO_URL = "/brand/hawk-white.png";
 
 export const NAV_LINKS = [
   { label: "Shop", to: "/shop" },

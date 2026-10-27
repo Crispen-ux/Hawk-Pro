@@ -87,8 +87,8 @@ export default function AccountAccess({
     }
   }
   return (
-    <div className="admin-theme min-h-screen grid lg:grid-cols-2 bg-white">
-      <section className="hidden lg:flex flex-col justify-between bg-[#17243b] text-white p-16">
+    <div className="admin-theme min-h-screen grid lg:grid-cols-2 bg-card">
+      <section className="hidden lg:flex flex-col justify-between bg-[#171717] text-white p-16">
         <Link to="/" className="flex gap-3 items-center text-3xl font-bold">
           <img
             src="/brand/hawk-white.png"
@@ -99,32 +99,34 @@ export default function AccountAccess({
           />
         </Link>
         <div>
-          <span className="text-orange-300 text-sm tracking-widest">
+          <span className="text-primary text-sm tracking-widest">
             BUILT FOR PERFORMANCE
           </span>
           <h1 className="text-5xl leading-tight font-semibold mt-5">
             Great sound.
             <br />A stronger business.
           </h1>
-          <p className="mt-6 max-w-sm text-slate-300">
-            Your products, customers and orders. Everything connected in one
-            place.
+          <p className="mt-6 max-w-sm text-white/70">
+            Your products, customers and orders. The same Hawk experience,
+            behind the scenes.
           </p>
         </div>
-        <p className="text-slate-400 text-sm">Hawk Pro Audio · South Africa</p>
+        <p className="text-white/60 text-sm">
+          Hawk Pro Audio · South Africa
+        </p>
       </section>
       <main className="flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
           <Link to="/" className="inline-block mb-6">
             <img
-              src="/brand/hawk-red.png"
+              src="/brand/hawk-white.png"
               alt="Hawk Pro Audio"
               width={2000}
               height={1250}
-              className="h-16 w-auto object-contain"
+              className="h-16 w-auto object-contain invert dark:invert-0"
             />
           </Link>
-          <p className="text-sm text-slate-500 mb-2">
+          <p className="text-sm text-muted-foreground mb-2">
             {admin ? "HAWK ADMINISTRATION" : "HAWK CUSTOMER ACCOUNT"}
           </p>
           <h1 className="text-3xl font-semibold mb-2">
@@ -136,7 +138,7 @@ export default function AccountAccess({
                   ? "Create your account"
                   : "Welcome back"}
           </h1>
-          <p className="text-slate-500 mb-8">
+          <p className="text-muted-foreground mb-8">
             {stage
               ? "Enter the code we emailed you. It expires in 10 minutes."
               : mode === "reset"
@@ -185,7 +187,7 @@ export default function AccountAccess({
                     mode === "login" ? "current-password" : "new-password"
                   }
                 />
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-muted-foreground">
                   At least 12 characters
                 </span>
               </label>
@@ -211,13 +213,13 @@ export default function AccountAccess({
               </p>
             )}
             {message && (
-              <p role="status" className="text-sm text-blue-600">
+              <p role="status" className="text-sm text-primary">
                 {message}
               </p>
             )}
             <Button
               disabled={busy}
-              className="w-full bg-blue-600 text-white hover:bg-blue-700"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {busy
                 ? "Please wait…"
@@ -256,9 +258,9 @@ export default function AccountAccess({
             )}
           </div>
           {admin && (
-            <p className="mt-6 text-xs leading-relaxed text-slate-500">
+            <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
               Administrator accounts are created by the store owner.{" "}
-              <Link to="/account/signup" className="text-blue-600 underline">
+              <Link to="/account/signup" className="text-primary underline">
                 Create a customer account
               </Link>{" "}
               or contact the owner for staff access.
@@ -266,11 +268,14 @@ export default function AccountAccess({
           )}
           <Link
             to={admin ? "/account/login" : "/admin/login"}
-            className="mt-6 block text-xs text-slate-500 underline"
+            className="mt-6 block text-xs text-muted-foreground underline"
           >
             {admin ? "Customer sign in" : "Staff sign in"}
           </Link>
-          <Link to="/" className="mt-10 inline-block text-sm text-slate-500">
+          <Link
+            to="/"
+            className="mt-10 inline-block text-sm text-muted-foreground"
+          >
             ← Back to store
           </Link>
         </div>

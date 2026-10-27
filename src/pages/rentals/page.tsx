@@ -1,3 +1,4 @@
+import StoreContact from "@/components/layout/store-contact";
 import RentalAiHelper from "./_components/rental-ai-helper.tsx";
 import RentalForm from "./_components/rental-form.tsx";
 import { IMAGES, unsplash } from "@/data/site.ts";
@@ -37,6 +38,7 @@ export default function RentalsPage() {
             Tell us about your event. We'll review your request and respond with
             a quote. Availability is not confirmed until we reply.
           </p>
+          <StoreContact />
         </div>
         <div className="space-y-8">
           <RentalAiHelper />

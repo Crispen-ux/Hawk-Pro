@@ -1,3 +1,4 @@
+import StoreContact from "@/components/layout/store-contact";
 import { Link } from "react-router-dom";
 import CraftVideo from "@/components/craft-video.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -29,6 +30,7 @@ export default function AboutPage() {
         once verified information is provided.
       </p>
       <CraftVideo />
+      <StoreContact />
       <Button asChild size="lg">
         <Link to="/shop">Shop the range</Link>
       </Button>

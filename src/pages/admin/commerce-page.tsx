@@ -251,7 +251,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
       <header className="flex flex-wrap justify-between items-center gap-4">
         <div>
           <h1 className="text-2xl font-semibold">{title}</h1>
-          <p className="text-sm text-slate-400 mt-2">{subtitle}</p>
+          <p className="text-sm text-muted-foreground mt-2">{subtitle}</p>
         </div>
         <Button onClick={() => edit()}>
           <Plus size={16} />
@@ -259,7 +259,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
         </Button>
       </header>
       {notice && (
-        <div role="status" className="admin-panel text-sm text-blue-600">
+        <div role="status" className="admin-panel text-sm text-primary">
           {notice}
         </div>
       )}
@@ -274,7 +274,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
       <div className="grid sm:grid-cols-3 gap-5">
         {summary.map(([label, value]) => (
           <section key={String(label)} className="admin-panel">
-            <p className="text-xs text-slate-500">{label}</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
             <p className="text-3xl font-semibold mt-3">{value}</p>
           </section>
         ))}
@@ -283,7 +283,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
         <div className="p-5 flex flex-wrap items-center gap-4 justify-between">
           <div className="relative w-full sm:w-72">
             <Search
-              className="absolute top-3 left-3 text-slate-400"
+              className="absolute top-3 left-3 text-muted-foreground"
               size={15}
             />
             <Input
@@ -353,7 +353,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                 <tr key={r.id}>
                   {kind === "orders" ? (
                     <>
-                      <td className="text-blue-600">
+                      <td className="text-primary">
                         #{r.id.slice(0, 8).toUpperCase()}
                       </td>
                       <td>{String(r.data.name)}</td>
@@ -397,7 +397,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                       <td>
                         <a
                           href={"mailto:" + r.data.email}
-                          className="text-blue-600"
+                          className="text-primary"
                         >
                           {String(r.data.email)}
                         </a>
@@ -438,17 +438,17 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
           </table>
         </div>
         {query.isPending ? (
-          <p className="text-center p-12 text-slate-400">Loading…</p>
+          <p className="text-center p-12 text-muted-foreground">Loading…</p>
         ) : (
           rows.length === 0 && (
             <div className="py-16 text-center">
-              <Package className="mx-auto size-10 text-slate-300 mb-4" />
+              <Package className="mx-auto size-10 text-muted-foreground mb-4" />
               <h2 className="font-medium">
                 {search || filter !== "all"
                   ? "No matching records"
                   : `No ${title.toLowerCase()} yet`}
               </h2>
-              <p className="text-sm text-slate-400 mt-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 {search
                   ? "Try another search."
                   : "Add your first record to get started."}
@@ -462,20 +462,20 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
         )}
       </section>
       {kind === "inventory" && (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-muted-foreground">
           Stock is deducted automatically when an order moves from processing to
           shipped. Update on-hand quantities for stock receipts, returns, and
           stocktakes.
         </p>
       )}
       {kind === "campaigns" && (
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-muted-foreground">
           Campaign metrics are entered manually from your marketing platforms.
           Revenue attribution is reported separately from order revenue.
         </p>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="admin-theme max-h-[90vh] overflow-y-auto bg-white">
+        <DialogContent className="admin-theme max-h-[90vh] overflow-y-auto bg-card">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit record" : action}</DialogTitle>
             <DialogDescription>

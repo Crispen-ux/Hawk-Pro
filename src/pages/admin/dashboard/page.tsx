@@ -101,7 +101,7 @@ export default function AdminDashboard({
     <div className="p-5 lg:p-9 space-y-7 max-w-[1600px] mx-auto">
       <div className="flex flex-wrap justify-between gap-4 items-center">
         <div>
-          <p className="text-xs text-slate-400 mb-1">
+          <p className="text-xs text-muted-foreground mb-1">
             Your business at a glance
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -111,7 +111,7 @@ export default function AdminDashboard({
         <div className="flex gap-3">
           <select
             aria-label="Reporting period"
-            className="border bg-white px-3 text-xs"
+            className="border bg-card px-3 text-xs"
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
           >
@@ -143,25 +143,25 @@ export default function AdminDashboard({
       {records.isPending && <p role="status">Loading business data…</p>}
       <div className="grid xl:grid-cols-[1fr_1.3fr] gap-6">
         <div className="space-y-5">
-          <section className="rounded-xl bg-[#eaf0ff] p-7 relative overflow-hidden min-h-44">
+          <section className="admin-brand-panel p-7 relative overflow-hidden min-h-44">
             <div className="relative z-10 max-w-[75%]">
-              <Badge className="bg-white text-blue-600 border-0 mb-3 text-[10px]">
+              <Badge className="bg-card text-primary border-0 mb-3 text-[10px]">
                 LET’S MAKE SOME NOISE
               </Badge>
               <h2 className="text-xl font-semibold">
                 Good things are taking shape.
               </h2>
-              <p className="text-sm text-slate-500 mt-2 mb-5">
+              <p className="text-sm text-white/70 mt-2 mb-5">
                 Your next great customer experience starts here.
               </p>
               <Link
                 to="/admin/orders"
-                className="text-xs text-blue-600 font-semibold flex gap-2 items-center"
+                className="text-xs text-primary font-semibold flex gap-2 items-center"
               >
                 Manage your orders <ArrowRight size={14} />
               </Link>
             </div>
-            <ChartNoAxesCombined className="absolute right-7 bottom-8 text-blue-500 size-24 opacity-75" />
+            <ChartNoAxesCombined className="absolute right-7 bottom-8 text-primary size-24 opacity-75" />
           </section>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
@@ -170,28 +170,28 @@ export default function AdminDashboard({
                 value: money(revenue),
                 hint: "Paid, non-cancelled orders",
                 icon: Wallet,
-                color: "text-blue-600 bg-blue-50",
+                color: "text-primary bg-primary/10",
               },
               {
                 label: "Total orders",
                 value: selected.length,
                 hint: `${selected.filter((o) => o.data.status === "pending").length} awaiting processing`,
                 icon: ShoppingBag,
-                color: "text-violet-600 bg-violet-50",
+                color: "text-primary bg-primary/10",
               },
               {
                 label: "Customers",
                 value: customers.length,
                 hint: "Customer directory",
                 icon: Users,
-                color: "text-emerald-600 bg-emerald-50",
+                color: "text-foreground bg-muted",
               },
               {
                 label: "Products",
                 value: products.data?.length ?? 0,
                 hint: `${products.data?.filter((p) => p.published).length ?? 0} published in your store`,
                 icon: Package,
-                color: "text-orange-500 bg-orange-50",
+                color: "text-primary bg-primary/10",
               },
             ].map((s) => (
               <div
@@ -202,9 +202,9 @@ export default function AdminDashboard({
                   <s.icon size={20} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">{s.label}</p>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
                   <p className="text-2xl font-semibold my-2">{s.value}</p>
-                  <p className="text-[10px] text-slate-400">{s.hint}</p>
+                  <p className="text-[10px] text-muted-foreground">{s.hint}</p>
                 </div>
               </div>
             ))}
@@ -214,12 +214,12 @@ export default function AdminDashboard({
           <div className="flex justify-between">
             <div>
               <h2 className="font-semibold text-sm">Sales performance</h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Revenue across your selected period
               </p>
             </div>
-            <span className="text-xs text-blue-500 flex gap-1 items-center self-start">
-              <span className="size-2 rounded-full bg-blue-500" />
+            <span className="text-xs text-primary flex gap-1 items-center self-start">
+              <span className="size-2 rounded-full bg-primary" />
               Revenue
             </span>
           </div>
@@ -229,24 +229,24 @@ export default function AdminDashboard({
                 <CartesianGrid
                   vertical={false}
                   strokeDasharray="3 4"
-                  stroke="#eef2f7"
+                  stroke="var(--border)"
                 />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 10, fill: "#94a3b8" }}
+                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 10, fill: "#94a3b8" }}
+                  tick={{ fontSize: 10, fill: "var(--muted-foreground)" }}
                 />
                 <Tooltip formatter={(v) => money(Number(v))} />
                 <Bar
                   dataKey="revenue"
                   name="Revenue"
-                  fill="#5b8cf7"
+                  fill="var(--primary)"
                   radius={[5, 5, 0, 0]}
                   maxBarSize={28}
                 />
@@ -254,7 +254,7 @@ export default function AdminDashboard({
             </ResponsiveContainer>
           </div>
           {paid.length === 0 && (
-            <p className="text-xs text-slate-400 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               Recorded paid orders will populate this chart.
             </p>
           )}
@@ -264,7 +264,7 @@ export default function AdminDashboard({
         <section className="admin-panel">
           <div className="flex justify-between mb-5">
             <h2 className="text-sm font-semibold">Fulfillment snapshot</h2>
-            <ShoppingBag size={17} className="text-slate-400" />
+            <ShoppingBag size={17} className="text-muted-foreground" />
           </div>
           <div className="text-4xl font-semibold mt-6">
             {selected.length
@@ -275,14 +275,14 @@ export default function AdminDashboard({
                     100,
                 )
               : 0}
-            <span className="text-lg text-slate-400">%</span>
+            <span className="text-lg text-muted-foreground">%</span>
           </div>
-          <p className="text-xs text-slate-400 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Orders delivered this period
           </p>
-          <div className="h-2 rounded-full bg-slate-100 my-5">
+          <div className="h-2 rounded-full bg-muted my-5">
             <div
-              className="h-full rounded-full bg-blue-500"
+              className="h-full rounded-full bg-primary"
               style={{
                 width: `${selected.length ? (selected.filter((o) => o.data.status === "delivered").length / selected.length) * 100 : 0}%`,
               }}
@@ -290,7 +290,7 @@ export default function AdminDashboard({
           </div>
           {["pending", "processing", "shipped", "delivered"].map((s) => (
             <div key={s} className="flex justify-between text-xs py-2">
-              <span className="capitalize text-slate-500">{s}</span>
+              <span className="capitalize text-muted-foreground">{s}</span>
               <span>{selected.filter((o) => o.data.status === s).length}</span>
             </div>
           ))}
@@ -304,7 +304,7 @@ export default function AdminDashboard({
                 key={p.id}
                 className="flex gap-3 items-center py-4 border-b last:border-0"
               >
-                <div className="size-10 bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="size-10 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                   {p.images[0] ? (
                     <img
                       src={p.images[0]}
@@ -312,21 +312,23 @@ export default function AdminDashboard({
                       className="size-full object-cover"
                     />
                   ) : (
-                    <Package className="text-slate-400" size={18} />
+                    <Package className="text-muted-foreground" size={18} />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{p.name}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-[10px] text-muted-foreground mt-1">
                     {p.category}
                   </p>
                 </div>
                 <span className="text-xs">{p.sales} sold</span>
-                <span className="text-[10px] text-slate-300">0{i + 1}</span>
+                <span className="text-[10px] text-muted-foreground">
+                  0{i + 1}
+                </span>
               </Link>
             ))
           ) : (
-            <p className="text-sm text-slate-400 py-10">
+            <p className="text-sm text-muted-foreground py-10">
               Add products to start building your catalogue.
             </p>
           )}
@@ -339,24 +341,26 @@ export default function AdminDashboard({
               <p className="text-sm font-medium">
                 {low.length} low-stock products
               </p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Keep your best sound in stock.
               </p>
             </div>
           </div>
           <Link
             to="/admin/inventory"
-            className="flex justify-between py-5 text-xs text-blue-600"
+            className="flex justify-between py-5 text-xs text-primary"
           >
             Review inventory
             <ArrowUpRight size={16} />
           </Link>
           <div className="border-t pt-5">
-            <p className="text-xs text-slate-500 mb-2">Average order value</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              Average order value
+            </p>
             <p className="text-2xl font-semibold">
               {money(paid.length ? revenue / paid.length : 0)}
             </p>
-            <p className="text-[10px] text-slate-400 mt-2">
+            <p className="text-[10px] text-muted-foreground mt-2">
               Based on paid orders in this period
             </p>
           </div>
@@ -365,7 +369,7 @@ export default function AdminDashboard({
       <section className="admin-panel !p-0 overflow-hidden">
         <div className="p-6 flex justify-between">
           <h2 className="text-sm font-semibold">Recent orders</h2>
-          <Link to="/admin/orders" className="text-xs text-blue-600">
+          <Link to="/admin/orders" className="text-xs text-primary">
             View all →
           </Link>
         </div>
@@ -389,7 +393,7 @@ export default function AdminDashboard({
               {selected.slice(0, 5).map((o) => (
                 <tr key={o.id}>
                   <td>
-                    <Link to="/admin/orders" className="text-blue-600">
+                    <Link to="/admin/orders" className="text-primary">
                       #{o.id.slice(0, 8).toUpperCase()}
                     </Link>
                   </td>
@@ -406,9 +410,9 @@ export default function AdminDashboard({
           </table>
         </div>
         {selected.length === 0 && (
-          <p className="text-center text-sm text-slate-400 py-12">
+          <p className="text-center text-sm text-muted-foreground py-12">
             Your orders will appear here.{" "}
-            <Link to="/admin/orders" className="text-blue-600">
+            <Link to="/admin/orders" className="text-primary">
               Create your first order →
             </Link>
           </p>
@@ -423,7 +427,11 @@ export default function AdminDashboard({
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Area dataKey="revenue" stroke="#5b8cf7" fill="#eaf0ff" />
+                <Area
+                  dataKey="revenue"
+                  stroke="var(--primary)"
+                  fill="var(--accent)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>

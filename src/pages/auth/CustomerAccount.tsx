@@ -16,7 +16,7 @@ export default function CustomerAccount() {
     retry: false,
   });
   return (
-    <main className="admin-theme min-h-screen bg-slate-50 p-8">
+    <main className="admin-theme min-h-screen bg-muted p-8">
       <div className="max-w-3xl mx-auto admin-panel space-y-5">
         <Link to="/" className="font-bold text-2xl">
           <img
@@ -40,7 +40,7 @@ export default function CustomerAccount() {
         ) : (
           <>
             <p>Welcome, {q.data?.user.name}.</p>
-            <p className="text-slate-500">{q.data?.user.email}</p>
+            <p className="text-muted-foreground">{q.data?.user.email}</p>
             <div className="flex flex-wrap gap-3">
               <Button asChild>
                 <Link to="/shop">Explore the catalogue</Link>
@@ -73,7 +73,7 @@ export default function CustomerAccount() {
                     <p className="font-semibold">
                       #{o.id.slice(0, 8).toUpperCase()}
                     </p>
-                    <p className="text-sm text-slate-500 mt-1">
+                    <p className="text-sm text-muted-foreground mt-1">
                       {String(o.data.productName)} × {String(o.data.quantity)}
                     </p>
                     {Boolean(o.data.tracking) && (
@@ -84,14 +84,14 @@ export default function CustomerAccount() {
                   </div>
                   <div className="text-right">
                     <p>{money(Number(o.data.total))}</p>
-                    <p className="capitalize text-sm text-blue-600 mt-1">
+                    <p className="capitalize text-sm text-primary mt-1">
                       {String(o.data.status)}
                     </p>
                   </div>
                 </article>
               ))
             ) : (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 No orders yet. Orders placed with your account email will appear
                 here.
               </p>

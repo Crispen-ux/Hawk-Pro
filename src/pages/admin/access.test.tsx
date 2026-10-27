@@ -6,6 +6,13 @@ import AccountAccess from "../auth/AccountAccess";
 import { request } from "@/lib/api";
 
 vi.mock("@/lib/api", () => ({ request: vi.fn() }));
+vi.mock("@/hooks/use-settings", () => ({
+  useSiteSettings: () => ({
+    settings: { onboardingCompleted: true },
+    ready: true,
+    error: null,
+  }),
+}));
 afterEach(() => {
   cleanup();
   vi.resetAllMocks();
