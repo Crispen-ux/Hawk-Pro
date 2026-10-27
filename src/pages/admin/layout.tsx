@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -32,30 +38,55 @@ const nav = [
 ] as const;
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  const [verifiedPath, setVerifiedPath] = useState<string | null>(null);
   const [failed, setFailed] = useState("");
   const [open, setOpen] = useState(false);
   useEffect(() => {
     let active = true;
-    request<{ user: { name: string; role: string } }>("/api/account")
-      .then((r) => {
-        if (!active) return;
-        if (r.user.role !== "admin") {
-          navigate("/admin/login", { replace: true });
-          return;
-        }
-        setUser(r.user);
-      })
-      .catch((e) => {
-        if (active) {
-          if (e.status === 401) navigate("/admin/login", { replace: true });
-          else setFailed(e.message);
-        }
-      });
+    const verify = () =>
+      request<{ user: { name: string; role: string } }>("/api/account")
+        .then((r) => {
+          if (!active) return;
+          if (r.user.role !== "admin") {
+            setUser(null);
+            navigate("/admin/login", {
+              replace: true,
+              state: {
+                returnTo: location.pathname,
+                authError: "An administrator account is required.",
+              },
+            });
+            return;
+          }
+          setUser(r.user);
+          setVerifiedPath(location.pathname);
+        })
+        .catch((e) => {
+          if (active) {
+            setUser(null);
+            navigate("/admin/login", {
+              replace: true,
+              state: {
+                returnTo: location.pathname,
+                authError:
+                  e.status === 401
+                    ? "Please sign in to access administration."
+                    : "We could not verify your session. Please sign in again. If this continues, check the server configuration.",
+              },
+            });
+          }
+        });
+    void verify();
+    const interval = window.setInterval(verify, 60_000);
+    window.addEventListener("focus", verify);
     return () => {
       active = false;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", verify);
     };
-  }, [navigate]);
+  }, [navigate, location.pathname]);
   const signOut = async () => {
     try {
       await request("/api/account", {
@@ -68,6 +99,17 @@ export default function AdminLayout() {
       setFailed(e instanceof Error ? e.message : "Could not sign out");
     }
   };
+  if (!user || verifiedPath !== location.pathname)
+    return (
+      <main
+        className="admin-theme min-h-screen bg-slate-50 flex items-center justify-center"
+        aria-busy="true"
+      >
+        <p role="status" className="text-sm text-slate-500">
+          Checking administrator access…
+        </p>
+      </main>
+    );
   return (
     <div className="admin-theme min-h-screen bg-[#f5f7fb] text-slate-800">
       <a href="#admin-main" className="sr-only focus:not-sr-only">
@@ -87,7 +129,13 @@ export default function AdminLayout() {
           to="/admin"
           className="h-24 shrink-0 flex items-center justify-center px-7 py-3"
         >
-          <img src="/brand/hawk-black.png" alt="Hawk Pro Audio administration" width={2000} height={1250} className="h-16 w-auto object-contain" />
+          <img
+            src="/brand/hawk-black.png"
+            alt="Hawk Pro Audio administration"
+            width={2000}
+            height={1250}
+            className="h-16 w-auto object-contain"
+          />
         </Link>
         <div className="px-6 pt-7 pb-3 text-[10px] font-semibold tracking-[.18em] text-slate-400">
           WORKSPACE
@@ -166,7 +214,7 @@ export default function AdminLayout() {
               role="alert"
             >
               {failed}
-              <Button className="ml-4" onClick={() => location.reload()}>
+              <Button className="ml-4" onClick={() => window.location.reload()}>
                 Retry
               </Button>
             </div>
@@ -182,5 +230,3 @@ export default function AdminLayout() {
     </div>
   );
 }
-
-

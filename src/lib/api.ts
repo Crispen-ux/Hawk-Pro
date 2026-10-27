@@ -38,6 +38,8 @@ export async function request<T>(
     res = await fetch(path, {
       method: options.method ?? "GET",
       headers,
+      credentials: "same-origin",
+      cache: "no-store",
       body:
         options.body === undefined ? undefined : JSON.stringify(options.body),
     });

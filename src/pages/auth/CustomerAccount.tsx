@@ -19,7 +19,13 @@ export default function CustomerAccount() {
     <main className="admin-theme min-h-screen bg-slate-50 p-8">
       <div className="max-w-3xl mx-auto admin-panel space-y-5">
         <Link to="/" className="font-bold text-2xl">
-          <img src="/brand/hawk-black.png" alt="Hawk Pro Audio" width={2000} height={1250} className="h-16 w-auto object-contain" />
+          <img
+            src="/brand/hawk-black.png"
+            alt="Hawk Pro Audio"
+            width={2000}
+            height={1250}
+            className="h-16 w-auto object-contain"
+          />
         </Link>
         <h1 className="text-2xl font-semibold">Your account</h1>
         {q.isPending ? (
@@ -40,7 +46,7 @@ export default function CustomerAccount() {
                 <Link to="/shop">Explore the catalogue</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/account/login">Password & security</Link>
+                <Link to="/account/reset-password">Password & security</Link>
               </Button>
               <Button
                 variant="ghost"
@@ -96,4 +102,3 @@ export default function CustomerAccount() {
     </main>
   );
 }
-

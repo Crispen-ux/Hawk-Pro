@@ -74,13 +74,18 @@ export async function requireAdmin(
   req: ApiRequest,
   res: ApiResponse,
 ): Promise<boolean> {
+  res.setHeader("Cache-Control", "no-store");
   const session = readSession(req);
   if (session) {
     const [account] = await getDb()
       .select()
       .from(accounts)
       .where(eq(accounts.id, session.id));
-    if (account?.role === "admin" && account.sessionVersion === session.version)
+    if (
+      account?.verified &&
+      account.role === "admin" &&
+      account.sessionVersion === session.version
+    )
       return true;
   }
   sendJson(res, 401, { error: "Administrator sign-in required" });

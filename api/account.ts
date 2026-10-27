@@ -33,13 +33,13 @@ export default withErrors(async (req, res) => {
       return;
     }
   }
-  const db = getDb();
   if (req.method === "GET") {
     const session = readSession(req);
     if (!session) {
       sendJson(res, 401, { error: "Sign in required" });
       return;
     }
+    const db = getDb();
     const [a] = await db
       .select()
       .from(accounts)
@@ -101,6 +101,7 @@ export default withErrors(async (req, res) => {
     sendJson(res, 200, { ok: true });
     return;
   }
+  const db = getDb();
   if (!body.email) {
     sendJson(res, 400, { error: "Email required" });
     return;

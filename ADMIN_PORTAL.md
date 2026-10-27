@@ -24,6 +24,8 @@ The existing Vite storefront now includes an admin workspace at `/admin` and cus
 
 ## Security and operating notes
 
+Authentication screens are directly accessible at `/admin/login`, `/admin/reset-password`, `/account/login`, `/account/signup`, and `/account/reset-password`. The admin navigation and nested pages are hidden until the server confirms a verified administrator session. Every admin route change is checked, and access is rechecked on window focus and every minute. Failed verification redirects to sign-in even if the API is unavailable. Public registration creates customer accounts only; provision staff accounts with `db/create-admin.mjs`.
+
 Sessions are signed HttpOnly cookies with SameSite=Lax, Secure in production, and an eight-hour lifetime. Administrator access is checked against the database on every protected request. Password resets revoke existing sessions. Passwords use scrypt with random salts. OTPs are HMAC protected, expire in ten minutes, permit five attempts and are consumed once. Password attempts and account actions are rate limited in Postgres. The legacy shared passcode no longer authorizes admin data endpoints.
 
 Order totals are snapshotted when created. Orders cannot have their product or quantity changed afterward. Fulfillment moves pending → processing → shipped → delivered; cancellation is available before shipment. Paid, non-cancelled orders contribute to revenue. Product prices use whole rands as in the existing catalogue.

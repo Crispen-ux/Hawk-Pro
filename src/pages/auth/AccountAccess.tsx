@@ -1,19 +1,33 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { request } from "@/lib/api";
-export default function AccountAccess({ admin = false }: { admin?: boolean }) {
+export default function AccountAccess({
+  admin = false,
+  initialMode = "login",
+}: {
+  admin?: boolean;
+  initialMode?: "login" | "register" | "reset";
+}) {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "register" | "reset">("login");
+  const location = useLocation();
+  const mode = initialMode;
+  const loginPath = admin ? "/admin/login" : "/account/login";
+  const resetPath = admin ? "/admin/reset-password" : "/account/reset-password";
   const [stage, setStage] = useState(false);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<string>(
+    location.state?.authError ??
+      (location.state?.passwordReset
+        ? "Password updated. Sign in with your new password."
+        : ""),
+  );
   const [busy, setBusy] = useState(false);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,16 +60,25 @@ export default function AccountAccess({ admin = false }: { admin?: boolean }) {
         setStage(true);
         setMessage("Check your inbox for your six-digit code.");
       } else if (mode === "reset") {
-        setStage(false);
-        setMode("login");
-        setPassword("");
-        setMessage("Password updated. Sign in with your new password.");
+        navigate(loginPath, { replace: true, state: { passwordReset: true } });
       } else {
         if (admin && result.role !== "admin") {
           setError("This account does not have administrator access.");
           return;
         }
-        navigate(admin ? "/admin" : "/account");
+        const returnTo = location.state?.returnTo;
+        navigate(
+          admin &&
+            typeof returnTo === "string" &&
+            returnTo.startsWith("/admin/") &&
+            !returnTo.startsWith("/admin/login") &&
+            !returnTo.startsWith("/admin/reset-password")
+            ? returnTo
+            : admin
+              ? "/admin"
+              : "/account",
+          { replace: true },
+        );
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Request failed");
@@ -67,7 +90,13 @@ export default function AccountAccess({ admin = false }: { admin?: boolean }) {
     <div className="admin-theme min-h-screen grid lg:grid-cols-2 bg-white">
       <section className="hidden lg:flex flex-col justify-between bg-[#17243b] text-white p-16">
         <Link to="/" className="flex gap-3 items-center text-3xl font-bold">
-          <img src="/brand/hawk-white.png" alt="Hawk Pro Audio" width={2000} height={1250} className="h-24 w-auto object-contain" />
+          <img
+            src="/brand/hawk-white.png"
+            alt="Hawk Pro Audio"
+            width={2000}
+            height={1250}
+            className="h-24 w-auto object-contain"
+          />
         </Link>
         <div>
           <span className="text-orange-300 text-sm tracking-widest">
@@ -86,7 +115,15 @@ export default function AccountAccess({ admin = false }: { admin?: boolean }) {
       </section>
       <main className="flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
-          <Link to="/" className="inline-block mb-6"><img src="/brand/hawk-red.png" alt="Hawk Pro Audio" width={2000} height={1250} className="h-16 w-auto object-contain" /></Link>
+          <Link to="/" className="inline-block mb-6">
+            <img
+              src="/brand/hawk-red.png"
+              alt="Hawk Pro Audio"
+              width={2000}
+              height={1250}
+              className="h-16 w-auto object-contain"
+            />
+          </Link>
           <p className="text-sm text-slate-500 mb-2">
             {admin ? "HAWK ADMINISTRATION" : "HAWK CUSTOMER ACCOUNT"}
           </p>
@@ -102,7 +139,11 @@ export default function AccountAccess({ admin = false }: { admin?: boolean }) {
           <p className="text-slate-500 mb-8">
             {stage
               ? "Enter the code we emailed you. It expires in 10 minutes."
-              : "Secure access with your password and a one-time code."}
+              : mode === "reset"
+                ? "Enter your email to receive a password reset code."
+                : mode === "register"
+                  ? "Create your customer account, then verify your email."
+                  : "Secure access with your password and a one-time code."}
           </p>
           <form onSubmit={submit} className="space-y-5">
             {!stage && (
@@ -181,35 +222,27 @@ export default function AccountAccess({ admin = false }: { admin?: boolean }) {
               {busy
                 ? "Please wait…"
                 : stage
-                  ? "Verify and continue"
+                  ? mode === "reset"
+                    ? "Reset password"
+                    : "Verify and continue"
                   : mode === "reset"
                     ? "Send reset code"
-                    : "Continue"}
+                    : mode === "register"
+                      ? "Create account"
+                      : "Sign in"}
               <ArrowRight />
             </Button>
           </form>
           <div className="mt-6 flex flex-wrap gap-4 text-sm">
-            <button
-              onClick={() => {
-                setMode(mode === "reset" ? "login" : "reset");
-                setStage(false);
-                setError("");
-                setMessage("");
-              }}
-            >
+            <Link to={mode === "reset" ? loginPath : resetPath}>
               {mode === "reset" ? "Back to sign in" : "Forgot password?"}
-            </button>
+            </Link>
             {!admin && (
-              <button
-                onClick={() => {
-                  setMode(mode === "register" ? "login" : "register");
-                  setStage(false);
-                }}
-              >
+              <Link to={mode === "register" ? loginPath : "/account/signup"}>
                 {mode === "register"
                   ? "Already have an account?"
                   : "Create an account"}
-              </button>
+              </Link>
             )}
             {stage && (
               <button
@@ -222,6 +255,21 @@ export default function AccountAccess({ admin = false }: { admin?: boolean }) {
               </button>
             )}
           </div>
+          {admin && (
+            <p className="mt-6 text-xs leading-relaxed text-slate-500">
+              Administrator accounts are created by the store owner.{" "}
+              <Link to="/account/signup" className="text-blue-600 underline">
+                Create a customer account
+              </Link>{" "}
+              or contact the owner for staff access.
+            </p>
+          )}
+          <Link
+            to={admin ? "/account/login" : "/admin/login"}
+            className="mt-6 block text-xs text-slate-500 underline"
+          >
+            {admin ? "Customer sign in" : "Staff sign in"}
+          </Link>
           <Link to="/" className="mt-10 inline-block text-sm text-slate-500">
             ← Back to store
           </Link>
@@ -230,4 +278,3 @@ export default function AccountAccess({ admin = false }: { admin?: boolean }) {
     </div>
   );
 }
-

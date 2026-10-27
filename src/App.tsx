@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { DefaultProviders } from "./components/providers/default.tsx";
 import SiteLayout from "./components/layout/site-layout.tsx";
 import AuthCallback from "./pages/auth/Callback.tsx";
@@ -36,10 +36,47 @@ export default function App() {
           fallback={<div className="p-12 text-center">Loading workspace…</div>}
         >
           <Routes>
-            <Route path="/account/login" element={<AccountAccess />} />
+            <Route
+              path="/account/login"
+              element={<AccountAccess key="customer-login" />}
+            />
+            <Route
+              path="/account/signup"
+              element={
+                <AccountAccess key="customer-signup" initialMode="register" />
+              }
+            />
+            <Route
+              path="/account/reset-password"
+              element={
+                <AccountAccess key="customer-reset" initialMode="reset" />
+              }
+            />
+            <Route
+              path="/login"
+              element={<Navigate to="/account/login" replace />}
+            />
+            <Route
+              path="/signup"
+              element={<Navigate to="/account/signup" replace />}
+            />
+            <Route
+              path="/forgot-password"
+              element={<Navigate to="/account/reset-password" replace />}
+            />
+            <Route
+              path="/reset-password"
+              element={<Navigate to="/account/reset-password" replace />}
+            />
             <Route path="/account" element={<CustomerAccount />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/admin/login" element={<AdminLogin />} />
+            <Route
+              path="/admin/reset-password"
+              element={
+                <AccountAccess key="admin-reset" admin initialMode="reset" />
+              }
+            />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="products" element={<AdminProducts />} />
@@ -60,6 +97,7 @@ export default function App() {
                 element={<CommercePage kind="campaigns" />}
               />
               <Route path="reports" element={<AdminDashboard reports />} />
+              <Route path="*" element={<Navigate to="/admin" replace />} />
             </Route>
             <Route element={<SiteLayout />}>
               <Route path="/" element={<Index />} />
