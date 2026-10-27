@@ -1,6 +1,16 @@
+import ProductDetailsFields from "../product-details-fields";
+import {
+  DEFAULT_PRODUCT_DETAILS,
+  normaliseProductDetails,
+} from "../../../../../db/product-details";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useForm, useFieldArray, useWatch } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  useWatch,
+  type Resolver,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
@@ -61,6 +71,7 @@ const DEFAULT_VALUES: FormValues = {
   images: [],
   specs: [],
   published: false,
+  details: DEFAULT_PRODUCT_DETAILS,
 };
 
 function slugify(value: string): string {
@@ -86,7 +97,7 @@ export default function AdminProductEditor() {
   const [product, setProduct] = useState<ProductRecord | null>(null);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as Resolver<FormValues>,
     defaultValues: DEFAULT_VALUES,
   });
 
@@ -94,6 +105,9 @@ export default function AdminProductEditor() {
   const images = useWatch({ control: form.control, name: "images" }) ?? [];
   const name = useWatch({ control: form.control, name: "name" });
   const published = useWatch({ control: form.control, name: "published" });
+  const details =
+    useWatch({ control: form.control, name: "details" }) ??
+    DEFAULT_PRODUCT_DETAILS;
   const category = useWatch({ control: form.control, name: "category" });
   const availability = useWatch({
     control: form.control,
@@ -118,6 +132,7 @@ export default function AdminProductEditor() {
           images: row.images,
           specs: row.specs,
           published: row.published,
+          details: normaliseProductDetails(row.details),
         });
       })
       .catch((e: unknown) => {
@@ -356,6 +371,21 @@ export default function AdminProductEditor() {
               </div>
             </section>
 
+            <ProductDetailsFields
+              value={details}
+              onChange={(value) =>
+                form.setValue("details", value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+            />
+            {form.formState.errors.details && (
+              <p role="alert" className="text-destructive text-sm">
+                Check the speaker details and ensure maximum dispatch time is
+                not earlier than minimum dispatch time.
+              </p>
+            )}
             <section className="space-y-4 border bg-card p-5">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-serif text-xl font-bold uppercase tracking-wide">
@@ -367,13 +397,48 @@ export default function AdminProductEditor() {
               </div>
 
               <label className="block text-sm space-y-2">
-                <span>{uploading ? 'Uploading image…' : 'Upload product image (JPEG, PNG or WebP, up to 4 MB)'}</span>
-                <Input type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading || images.length >= 8} onChange={async (event) => {
-                  const file=event.target.files?.[0];if(!file)return;
-                  if(file.size>4*1024*1024){toast.error('Maximum image size is 4 MB');return;}
-                  setUploading(true);
-                  try{const response=await fetch('/api/upload',{method:'POST',headers:{'Content-Type':file.type},body:file});const result=await response.json();if(!response.ok)throw new Error(result.error||'Upload failed');form.setValue('images',[...form.getValues('images'),result.url],{shouldDirty:true,shouldValidate:true});toast.success('Image uploaded');}catch(e){toast.error(e instanceof Error?e.message:'Upload failed');}finally{setUploading(false);event.target.value='';}
-                }}/>
+                <span>
+                  {uploading
+                    ? "Uploading image…"
+                    : "Upload product image (JPEG, PNG or WebP, up to 4 MB)"}
+                </span>
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={uploading || images.length >= 8}
+                  onChange={async (event) => {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 4 * 1024 * 1024) {
+                      toast.error("Maximum image size is 4 MB");
+                      return;
+                    }
+                    setUploading(true);
+                    try {
+                      const response = await fetch("/api/upload", {
+                        method: "POST",
+                        headers: { "Content-Type": file.type },
+                        body: file,
+                      });
+                      const result = await response.json();
+                      if (!response.ok)
+                        throw new Error(result.error || "Upload failed");
+                      form.setValue(
+                        "images",
+                        [...form.getValues("images"), result.url],
+                        { shouldDirty: true, shouldValidate: true },
+                      );
+                      toast.success("Image uploaded");
+                    } catch (e) {
+                      toast.error(
+                        e instanceof Error ? e.message : "Upload failed",
+                      );
+                    } finally {
+                      setUploading(false);
+                      event.target.value = "";
+                    }
+                  }}
+                />
               </label>
               {images.length > 0 && (
                 <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -557,4 +622,3 @@ export default function AdminProductEditor() {
     </div>
   );
 }
-

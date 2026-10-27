@@ -40,7 +40,6 @@ Storage references: https://vercel.com/docs/vercel-blob/using-blob-sdk and https
 
 Production build and TypeScript checks passed. All 47 tests passed using Node.js 24 with a single Vitest worker thread. The local admin sign-in route returned HTTP 200. Browser checks confirmed the storefront and updated sign-in identity. Live authentication, email delivery, Blob uploads and database workflows still require the configured services.
 
-
 ## Store setup and shared identity
 
 Administration now inherits the storefront Barlow/Barlow Condensed typography, orange brand accents, charcoal panels, shared theme tokens and bundled Hawk logos. Light and dark storefront themes also apply to administration.
@@ -50,3 +49,7 @@ New stores are directed to `/admin/onboarding` after administrator verification.
 `/admin/settings` edits those same settings and includes a live storefront preview. The public footer and contact blocks on About, Rentals and Repairs use this shared record. Email and phone details are clickable; multiline hours and addresses are preserved. Saved updates notify other open tabs and settings refresh when a tab receives focus. Failed loads are shown in administration so an unavailable database cannot silently lead to overwriting settings with defaults.
 
 The integration tests cover saved setup progress, resume, save failures, storefront updates, focus refresh, and compatibility with existing settings. Browser QA confirmed the storefront and updated sign-in branding; full live onboarding requires the configured Neon database and an administrator session.
+
+## Guest commerce update
+
+Speaker details, delivery estimates and guest Payflex checkout are implemented. See CHECKOUT_SETUP.md for the new product migration, shipping-zone configuration, Payflex environment variables, SADC quote flow, reservations and verification steps.

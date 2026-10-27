@@ -1,3 +1,7 @@
+import {
+  DEFAULT_PRODUCT_DETAILS,
+  type ProductDetails,
+} from "./product-details";
 import { sql } from "drizzle-orm";
 import {
   boolean,
@@ -34,6 +38,10 @@ export const products = pgTable("products", {
   images: jsonb("images").$type<string[]>().notNull().default([]),
   specs: jsonb("specs").$type<ProductSpecRow[]>().notNull().default([]),
   published: boolean("published").notNull().default(false),
+  details: jsonb("details")
+    .$type<ProductDetails>()
+    .notNull()
+    .default(DEFAULT_PRODUCT_DETAILS),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

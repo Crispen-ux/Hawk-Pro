@@ -8,20 +8,9 @@ export type { ProductRecord, ProductInput } from "../../db/validation.ts";
 
 export type CategoryId = "speakers" | "subwoofers" | "accessories" | "systems";
 
-export type Availability = "coming-soon" | "tbc";
+export type Availability = ProductRecord["availability"];
 
-export type Product = {
-  id: string;
-  slug: string;
-  name: string;
-  category: CategoryId;
-  priceZar: number;
-  shortDescription: string;
-  description: string;
-  availability: Availability;
-  images: string[];
-  specs: { label: string; value: string }[];
-};
+export type Product = Omit<ProductRecord, "createdAt" | "updatedAt">;
 
 export type Category = {
   id: CategoryId;
@@ -79,6 +68,9 @@ export function getRelatedProducts(
 }
 
 export const AVAILABILITY_LABEL: Record<Availability, string> = {
+  "in-stock": "In stock",
+  "out-of-stock": "Out of stock",
+  "pre-order": "Pre-order — contact us for lead times",
   "coming-soon": "Coming soon",
   tbc: "Availability to be confirmed",
 };

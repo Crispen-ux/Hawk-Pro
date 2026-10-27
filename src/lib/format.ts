@@ -1,7 +1,8 @@
 const zar = new Intl.NumberFormat("en-ZA", {
   style: "currency",
   currency: "ZAR",
-  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
 });
 
 export const formatZar = (amount: number): string => zar.format(amount);

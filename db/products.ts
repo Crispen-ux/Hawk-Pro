@@ -1,6 +1,12 @@
+import { normaliseProductDetails } from "./product-details";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "./index.ts";
-import { products, type NewProductRow, type ProductRow } from "./schema.ts";
+import {
+  products,
+  commerce,
+  type NewProductRow,
+  type ProductRow,
+} from "./schema.ts";
 import type { ProductInput } from "./validation.ts";
 
 function toRow(input: ProductInput): NewProductRow {
@@ -15,6 +21,7 @@ function toRow(input: ProductInput): NewProductRow {
     images: input.images,
     specs: input.specs,
     published: input.published,
+    details: input.details,
     updatedAt: new Date(),
   };
 }
@@ -37,14 +44,30 @@ function isUniqueViolation(error: unknown): boolean {
 
 export async function listProducts(options?: {
   publishedOnly?: boolean;
-}): Promise<ProductRow[]> {
+}): Promise<(ProductRow & { stockAvailable: number | null })[]> {
   const db = getDb();
   const rows = await db
     .select()
     .from(products)
     .where(options?.publishedOnly ? eq(products.published, true) : undefined)
     .orderBy(desc(products.createdAt));
-  return rows;
+  const inventory = await db
+    .select()
+    .from(commerce)
+    .where(eq(commerce.kind, "inventory"));
+  return rows.map((row) => {
+    const stock = inventory.find((r) => r.data.productId === row.id);
+    return {
+      ...row,
+      details: normaliseProductDetails(row.details),
+      stockAvailable: stock
+        ? Math.max(
+            0,
+            Number(stock.data.quantity) - Number(stock.data.reserved ?? 0),
+          )
+        : null,
+    };
+  });
 }
 
 export async function getProduct(id: string): Promise<ProductRow | undefined> {
@@ -54,7 +77,9 @@ export async function getProduct(id: string): Promise<ProductRow | undefined> {
     .from(products)
     .where(eq(products.id, id))
     .limit(1);
-  return rows[0];
+  return rows[0]
+    ? { ...rows[0], details: normaliseProductDetails(rows[0].details) }
+    : undefined;
 }
 
 export async function getProductBySlug(
@@ -66,7 +91,9 @@ export async function getProductBySlug(
     .from(products)
     .where(and(eq(products.slug, slug), eq(products.published, true)))
     .limit(1);
-  return rows[0];
+  return rows[0]
+    ? { ...rows[0], details: normaliseProductDetails(rows[0].details) }
+    : undefined;
 }
 
 export async function createProduct(input: ProductInput): Promise<ProductRow> {
@@ -93,7 +120,9 @@ export async function updateProduct(
       .set(toRow(input))
       .where(eq(products.id, id))
       .returning();
-    return rows[0];
+    return rows[0]
+      ? { ...rows[0], details: normaliseProductDetails(rows[0].details) }
+      : undefined;
   } catch (error) {
     if (isUniqueViolation(error)) throw new DuplicateSlugError();
     throw error;
@@ -105,5 +134,7 @@ export async function deleteProduct(
 ): Promise<ProductRow | undefined> {
   const db = getDb();
   const rows = await db.delete(products).where(eq(products.id, id)).returning();
-  return rows[0];
+  return rows[0]
+    ? { ...rows[0], details: normaliseProductDetails(rows[0].details) }
+    : undefined;
 }

@@ -28,6 +28,8 @@ import StoreOnboarding from "./pages/admin/onboarding/page";
 const CommercePage = lazy(() => import("./pages/admin/commerce-page"));
 import AccountAccess from "./pages/auth/AccountAccess";
 import CustomerAccount from "./pages/auth/CustomerAccount";
+const CheckoutPage = lazy(() => import("./pages/checkout/page"));
+const CheckoutReturn = lazy(() => import("./pages/checkout/return"));
 export default function App() {
   useServiceWorker();
   return (
@@ -104,6 +106,12 @@ export default function App() {
             <Route element={<SiteLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/shop" element={<ShopPage />} />
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route
+                path="/checkout/return/:orderId/:access"
+                element={<CheckoutReturn />}
+              />
+              <Route path="/checkout/return" element={<CheckoutReturn />} />
               <Route path="/shop/:slug" element={<ProductPage />} />
               <Route path="/rentals" element={<RentalsPage />} />
               <Route path="/repairs" element={<RepairsPage />} />

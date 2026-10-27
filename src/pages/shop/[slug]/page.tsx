@@ -1,50 +1,64 @@
 import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { MinusIcon, PlusIcon, ShoppingCartIcon } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  Minus,
+  Plus,
+  ShoppingCart,
+  Package,
+  ShieldCheck,
+  Headphones,
+  ZoomIn,
+} from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button.tsx";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
-import { Skeleton } from "@/components/ui/skeleton.tsx";
-import ProductCard from "@/components/shop/product-card.tsx";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import ProductCard from "@/components/shop/product-card";
+import DeliveryEstimator from "@/components/shop/delivery-estimator";
 import {
   AVAILABILITY_LABEL,
   findProductBySlug,
   getRelatedProducts,
-} from "@/data/products.ts";
-import { useCart } from "@/hooks/use-cart.tsx";
-import { useCatalogue } from "@/hooks/use-catalogue.tsx";
-import { formatZar } from "@/lib/format.ts";
-
+} from "@/data/products";
+import { useCart } from "@/hooks/use-cart";
+import { useCatalogue } from "@/hooks/use-catalogue";
+import { useSiteSettings } from "@/hooks/use-settings";
+import { useDeliveryQuote } from "@/hooks/use-delivery-quote";
+import { formatZar } from "@/lib/format";
+import {
+  normaliseProductDetails,
+  SOLD_AS_LABEL,
+} from "../../../../db/product-details";
 export default function ProductPage() {
   const { slug = "" } = useParams();
   const { products, loading, error } = useCatalogue();
   const product = findProductBySlug(products, slug);
   const { addItem } = useCart();
-  const [qty, setQty] = useState(1);
-  const [active, setActive] = useState(0);
-
-  if (loading) {
+  const { settings } = useSiteSettings();
+  const navigate = useNavigate();
+  const [qty, setQty] = useState(1),
+    [active, setActive] = useState(0),
+    [zoom, setZoom] = useState(false);
+  const delivery = useDeliveryQuote(
+    product ? [{ productId: product.id, quantity: qty }] : [],
+  );
+  if (loading)
     return (
-      <div className="mx-auto max-w-7xl space-y-10 px-4 py-12 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-2">
-          <Skeleton className="aspect-[4/3] w-full" />
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-12 w-2/3" />
-            <Skeleton className="h-8 w-40" />
-            <Skeleton className="h-24 w-full" />
-          </div>
+      <div className="mx-auto max-w-7xl px-4 py-12 grid lg:grid-cols-2 gap-10">
+        <Skeleton className="aspect-square" />
+        <div className="space-y-5">
+          <Skeleton className="h-16" />
+          <Skeleton className="h-48" />
         </div>
-        <span className="sr-only" role="status">
+        <span role="status" className="sr-only">
           Loading product
         </span>
       </div>
     );
-  }
-
-  if (error) {
+  if (error)
     return (
-      <div className="mx-auto max-w-3xl space-y-4 px-4 py-24">
+      <div className="mx-auto max-w-3xl p-8 py-24 space-y-5">
         <Alert role="status">
           <AlertTitle>Product could not be loaded</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
@@ -54,12 +68,10 @@ export default function ProductPage() {
         </Button>
       </div>
     );
-  }
-
-  if (!product) {
+  if (!product)
     return (
-      <div className="mx-auto max-w-3xl space-y-4 px-4 py-24 text-center">
-        <h1 className="font-serif text-4xl font-bold uppercase">
+      <div className="p-12 text-center space-y-5">
+        <h1 className="font-serif text-4xl uppercase font-bold">
           Product not found
         </h1>
         <Button asChild>
@@ -67,76 +79,195 @@ export default function ProductPage() {
         </Button>
       </div>
     );
-  }
-
+  const details = normaliseProductDetails(product.details),
+    gallery = product.images,
+    currentImage = gallery[Math.min(active, Math.max(0, gallery.length - 1))];
   const related = getRelatedProducts(products, product);
-  const gallery = product.images;
-  const currentImage =
-    gallery[Math.min(active, Math.max(gallery.length - 1, 0))];
-
+  const ready =
+    product.availability === "in-stock" &&
+    Number(product.stockAvailable ?? 0) >= qty &&
+    product.priceZar > 0 &&
+    details.soldAs !== "unspecified";
+  const attributes = [
+    { label: "SKU / model", value: details.sku },
+    {
+      label: "Speaker type",
+      value:
+        details.speakerType === "active"
+          ? "Active / powered"
+          : details.speakerType === "passive"
+            ? "Passive"
+            : details.speakerType === "not-applicable"
+              ? "Not applicable"
+              : "",
+    },
+    {
+      label: "Continuous / RMS power",
+      value: details.continuousWatts ? details.continuousWatts + " W" : "",
+    },
+    {
+      label: "Impedance",
+      value: details.impedanceOhms ? details.impedanceOhms + " Ω" : "",
+    },
+    { label: "Frequency response", value: details.frequencyResponse },
+    { label: "Connections", value: details.connections },
+    { label: "Dimensions", value: details.dimensions },
+    {
+      label: "Product weight",
+      value: details.weightKg ? details.weightKg + " kg" : "",
+    },
+    {
+      label: "Packed shipment weight",
+      value: details.packedWeightKg ? details.packedWeightKg + " kg" : "",
+    },
+    ...product.specs.map((s) => ({ label: s.label, value: s.value })),
+  ].filter((a) => a.value);
+  function buy() {
+    addItem(product!.id, qty);
+    if (ready) toast.success(qty + " × " + product!.name + " added to cart");
+    else navigate("/checkout");
+  }
   return (
-    <div className="mx-auto max-w-7xl space-y-16 px-4 py-12 lg:px-8">
-      <div className="grid gap-10 lg:grid-cols-2">
-        <div className="space-y-3">
-          <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
-            {currentImage && (
-              <img
-                src={currentImage}
-                alt={`${product.name}, view ${Math.min(active, gallery.length - 1) + 1}`}
-                className="size-full object-cover"
-              />
-            )}
-          </div>
-          <div className="grid grid-cols-4 gap-3">
-            {gallery.map((src, i) => (
-              <button
-                key={src + i}
-                onClick={() => setActive(i)}
-                aria-label={`Show image ${i + 1}`}
-                aria-current={active === i}
-                className={`aspect-square overflow-hidden border-2 focus-visible:outline-2 focus-visible:outline-primary ${active === i ? "border-primary" : "border-transparent"}`}
-              >
+    <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8 space-y-14">
+      <nav
+        aria-label="Breadcrumb"
+        className="text-xs uppercase tracking-wider text-muted-foreground"
+      >
+        <Link to="/shop" className="hover:text-primary">
+          Shop
+        </Link>{" "}
+        /{" "}
+        <Link
+          to={"/shop?category=" + product.category}
+          className="hover:text-primary"
+        >
+          {product.category}
+        </Link>{" "}
+        / <span className="text-foreground">{product.name}</span>
+      </nav>
+      <div className="grid lg:grid-cols-2 gap-10 lg:gap-14">
+        <div className="space-y-5">
+          <button
+            type="button"
+            className="aspect-square w-full bg-muted border relative flex items-center justify-center overflow-hidden"
+            disabled={!currentImage}
+            onClick={() => setZoom(true)}
+            aria-label="Enlarge product image"
+          >
+            {currentImage ? (
+              <>
                 <img
-                  src={src}
-                  alt=""
-                  loading="lazy"
-                  className="size-full object-cover"
+                  src={currentImage}
+                  alt={
+                    product.name +
+                    ", view " +
+                    (Math.min(active, gallery.length - 1) + 1)
+                  }
+                  className="size-full object-contain p-4"
                 />
-              </button>
-            ))}
+                <span className="absolute bottom-4 right-4 bg-background p-2 border">
+                  <ZoomIn size={18} />
+                </span>
+              </>
+            ) : (
+              <div className="text-muted-foreground text-center">
+                <Package className="size-16 mx-auto mb-4" />
+                <p>Product images coming soon</p>
+              </div>
+            )}
+          </button>
+          {gallery.length > 1 && (
+            <div className="grid grid-cols-4 gap-3">
+              {gallery.map((src, i) => (
+                <button
+                  key={src + i}
+                  type="button"
+                  onClick={() => setActive(i)}
+                  aria-label={"Show image " + (i + 1)}
+                  aria-current={active === i}
+                  className={
+                    "aspect-square border-2 bg-muted " +
+                    (active === i ? "border-primary" : "border-transparent")
+                  }
+                >
+                  <img
+                    src={src}
+                    alt=""
+                    loading="lazy"
+                    className="size-full object-contain p-2"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="hidden lg:grid grid-cols-2 gap-4 border-t pt-5 text-sm">
+            <div className="flex gap-3">
+              <ShieldCheck className="size-5 text-primary shrink-0" />
+              <div>
+                <p className="font-semibold">Know what you are buying</p>
+                <p className="text-muted-foreground text-xs mt-1">
+                  Verified product information and clear pack contents.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Headphones className="size-5 text-primary shrink-0" />
+              <div>
+                <p className="font-semibold">Talk to our team</p>
+                <a
+                  href={"mailto:" + settings.contact.email}
+                  className="text-muted-foreground hover:text-primary text-xs break-all"
+                >
+                  {settings.contact.email}
+                </a>
+              </div>
+            </div>
           </div>
         </div>
-
         <div className="space-y-6">
-          <nav
-            aria-label="Breadcrumb"
-            className="text-sm text-muted-foreground"
-          >
-            <Link to="/shop" className="hover:text-primary">
-              Shop
-            </Link>{" "}
-            /{" "}
-            <Link
-              to={`/shop?category=${product.category}`}
-              className="capitalize hover:text-primary"
-            >
-              {product.category}
-            </Link>
-          </nav>
-          <h1 className="font-serif text-5xl font-extrabold uppercase leading-none">
-            {product.name}
-          </h1>
-          <p className="text-3xl font-semibold">
-            {formatZar(product.priceZar)}
-          </p>
-          <p className="text-sm font-semibold uppercase tracking-wider text-primary">
-            {AVAILABILITY_LABEL[product.availability]}
-          </p>
-          <p className="text-muted-foreground">{product.description}</p>
-
-          <div className="flex flex-wrap items-center gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[.25em] text-primary mb-3">
+              HAWK / {product.category}
+            </p>
+            <h1 className="font-serif text-5xl lg:text-6xl font-extrabold uppercase leading-none">
+              {product.name}
+            </h1>
+            {details.sku && (
+              <p className="text-xs text-muted-foreground mt-3">
+                Model / SKU: {details.sku}
+              </p>
+            )}
+          </div>
+          <p className="text-muted-foreground">{product.shortDescription}</p>
+          <div className="border-y py-5 space-y-2">
+            <p className="text-3xl font-semibold">
+              {product.priceZar > 0
+                ? formatZar(product.priceZar)
+                : "Price on request"}
+            </p>
+            <p className="text-sm font-semibold">
+              {SOLD_AS_LABEL[details.soldAs]}
+            </p>
+            <p className="text-xs uppercase tracking-widest text-primary">
+              {AVAILABILITY_LABEL[product.availability]}
+              {product.availability === "in-stock" &&
+              product.stockAvailable !== null &&
+              product.stockAvailable !== undefined
+                ? " · " + Math.max(0, product.stockAvailable) + " available"
+                : ""}
+            </p>
+            {details.dispatchMinDays !== null &&
+              details.dispatchMaxDays !== null && (
+                <p className="text-sm text-muted-foreground">
+                  Dispatch estimate: {details.dispatchMinDays}–
+                  {details.dispatchMaxDays} working days after payment
+                  confirmation.
+                </p>
+              )}
+          </div>
+          <div className="flex flex-wrap gap-4 items-center">
             <div
-              className="flex items-center border"
+              className="border flex items-center"
               role="group"
               aria-label="Quantity"
             >
@@ -146,7 +277,7 @@ export default function ProductPage() {
                 aria-label="Decrease quantity"
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
               >
-                <MinusIcon />
+                <Minus />
               </Button>
               <span className="w-10 text-center" aria-live="polite">
                 {qty}
@@ -157,67 +288,130 @@ export default function ProductPage() {
                 aria-label="Increase quantity"
                 onClick={() => setQty((q) => Math.min(99, q + 1))}
               >
-                <PlusIcon />
+                <Plus />
               </Button>
             </div>
-            <Button
-              size="lg"
-              onClick={() => {
-                addItem(product.id, qty);
-                toast.success(`${qty} x ${product.name} added to cart`);
-              }}
-            >
-              <ShoppingCartIcon /> Add to cart
+            <Button size="lg" onClick={buy}>
+              <ShoppingCart size={18} />
+              {ready ? "Add to cart" : "Request a quote"}
             </Button>
           </div>
-
-          <Alert>
-            <AlertDescription>
-              Checkout is not connected yet: add items to your cart and contact
-              us to place your order.
-            </AlertDescription>
-          </Alert>
-
-          <section aria-labelledby="specs">
-            <h2
-              id="specs"
-              className="mb-2 font-serif text-2xl font-bold uppercase"
-            >
-              Technical specifications
+          <p className="text-xs text-muted-foreground">
+            {ready
+              ? "No account required at checkout. Delivery is calculated before payment."
+              : "We will confirm availability, product details and delivery before any payment."}
+          </p>
+          <DeliveryEstimator
+            destination={delivery.destination}
+            onChange={delivery.setDestination}
+            quote={delivery.quote}
+            busy={delivery.busy}
+            error={delivery.error}
+            onEstimate={() => void delivery.estimate()}
+          />
+          <section className="border-t pt-5 space-y-3">
+            <h2 className="font-serif text-2xl uppercase font-bold">
+              What is in the box
             </h2>
-            {product.specs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No specifications listed yet.
+            <p className="whitespace-pre-line text-sm text-muted-foreground">
+              {details.included ||
+                "Please contact our team to confirm box contents before ordering."}
+            </p>
+            {details.speakerType === "passive" && (
+              <p className="text-sm border-l-2 border-primary pl-3">
+                A compatible external amplifier is required. Check the listed
+                impedance and power requirements.
               </p>
-            ) : (
-              <dl className="divide-y border">
-                {product.specs.map((s) => (
-                  <div
-                    key={s.label}
-                    className="grid grid-cols-2 gap-4 px-4 py-2.5 text-sm"
-                  >
-                    <dt className="text-muted-foreground">{s.label}</dt>
-                    <dd>{s.value}</dd>
-                  </div>
-                ))}
-              </dl>
+            )}
+            {details.speakerType === "active" && (
+              <p className="text-sm border-l-2 border-primary pl-3">
+                Built-in amplification. Check the listed signal connections and
+                power requirements for your setup.
+              </p>
             )}
           </section>
         </div>
       </div>
-
+      <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10 border-t pt-10">
+        <section className="space-y-4">
+          <h2 className="font-serif text-3xl uppercase font-bold">
+            Built for your sound
+          </h2>
+          <p className="whitespace-pre-line text-muted-foreground leading-relaxed">
+            {product.description}
+          </p>
+          <details className="border-t pt-4">
+            <summary className="cursor-pointer font-semibold">
+              Warranty & support
+            </summary>
+            <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">
+              {details.warranty ||
+                "Contact our team for the warranty coverage that applies to this product."}
+            </p>
+            <a
+              href={"mailto:" + settings.contact.email}
+              className="text-primary text-sm inline-block mt-3"
+            >
+              Ask about this product
+            </a>
+          </details>
+          <details className="border-t pt-4">
+            <summary className="cursor-pointer font-semibold">
+              Returns & delivery damage
+            </summary>
+            <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">
+              {settings.sales.returnsPolicy ||
+                "Please contact the store for the returns and delivery-damage process before ordering."}
+            </p>
+          </details>
+        </section>
+        <section>
+          <h2 className="font-serif text-3xl uppercase font-bold mb-5">
+            Technical specifications
+          </h2>
+          {attributes.length ? (
+            <dl className="border divide-y">
+              {attributes.map((s, i) => (
+                <div
+                  key={s.label + i}
+                  className="grid grid-cols-2 gap-4 px-4 py-3 text-sm"
+                >
+                  <dt className="text-muted-foreground">{s.label}</dt>
+                  <dd className="whitespace-pre-line">{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Contact our team for the technical data sheet.
+            </p>
+          )}
+        </section>
+      </div>
       {related.length > 0 && (
         <section className="space-y-6">
           <h2 className="font-serif text-4xl font-bold uppercase">
-            Related products
+            Related equipment
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {related.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
         </section>
       )}
+      <Dialog open={zoom} onOpenChange={setZoom}>
+        <DialogContent className="max-w-4xl">
+          <DialogTitle className="sr-only">{product.name}</DialogTitle>
+          {currentImage && (
+            <img
+              src={currentImage}
+              alt={product.name}
+              className="w-full max-h-[80vh] object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

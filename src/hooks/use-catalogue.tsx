@@ -45,7 +45,13 @@ export function CatalogueProvider({ children }: { children: ReactNode }) {
       .catch((e: unknown) => {
         if (cancelled) return;
         setProducts([]);
-        setError(e instanceof ApiError ? e.message : "Cannot reach the server");
+        setError(
+          e instanceof ApiError && e.status >= 500
+            ? "Our catalogue is temporarily unavailable. Please try again shortly or contact the store."
+            : e instanceof ApiError
+              ? e.message
+              : "Cannot reach the server",
+        );
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

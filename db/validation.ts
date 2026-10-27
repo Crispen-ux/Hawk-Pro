@@ -1,3 +1,11 @@
+import {
+  productDetailsSchema,
+  DEFAULT_PRODUCT_DETAILS,
+} from "./product-details";
+import {
+  salesSettingsSchema,
+  DEFAULT_SALES_SETTINGS,
+} from "./sales-validation";
 import { z } from "zod";
 
 // Shared between the Vercel API handlers and the admin form so both sides
@@ -13,7 +21,13 @@ export const PRODUCT_CATEGORIES = [
   "systems",
 ] as const;
 
-export const PRODUCT_AVAILABILITY = ["coming-soon", "tbc"] as const;
+export const PRODUCT_AVAILABILITY = [
+  "coming-soon",
+  "tbc",
+  "in-stock",
+  "out-of-stock",
+  "pre-order",
+] as const;
 
 export const ENQUIRY_KINDS = ["rental", "repair"] as const;
 
@@ -60,6 +74,7 @@ export const productInputSchema = z.object({
     .max(8, "Up to 8 images"),
   specs: z.array(productSpecSchema).max(24, "Up to 24 specifications"),
   published: z.boolean(),
+  details: productDetailsSchema.default(DEFAULT_PRODUCT_DETAILS),
 });
 
 export type ProductInput = z.infer<typeof productInputSchema>;
@@ -67,6 +82,7 @@ export type ProductInput = z.infer<typeof productInputSchema>;
 // JSON shapes the API returns (dates arrive as ISO strings).
 export type ProductRecord = ProductInput & {
   id: string;
+  stockAvailable?: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -131,10 +147,17 @@ export const settingsSchema = z
       tagline:
         "Speakers, subwoofers and professional audio. Rentals and repairs.",
     }),
+    sales: salesSettingsSchema.default(DEFAULT_SALES_SETTINGS),
     onboardingCompleted: z.boolean().default(false),
     onboardingStep: z.number().int().min(0).max(3).default(0),
   })
   .superRefine((value, ctx) => {
+    if (value.sales.checkoutEnabled && !value.onboardingCompleted)
+      ctx.addIssue({
+        code: "custom",
+        path: ["sales", "checkoutEnabled"],
+        message: "Complete store onboarding before enabling payment",
+      });
     if (!value.onboardingCompleted) return;
     for (const key of ["email", "phone", "address", "hours"] as const) {
       if (value.contact[key] === CONTACT_DEFAULTS[key])
@@ -148,6 +171,7 @@ export const settingsSchema = z
 export type SettingsInput = z.infer<typeof settingsSchema>;
 
 export const DEFAULT_SETTINGS: SettingsInput = {
+  sales: DEFAULT_SALES_SETTINGS,
   store: {
     name: "HAWK",
     tagline:
@@ -181,6 +205,9 @@ export function normaliseSettings(raw: unknown): SettingsInput {
     store: storeSchema.safeParse(obj.store).success
       ? storeSchema.parse(obj.store)
       : DEFAULT_SETTINGS.store,
+    sales: salesSettingsSchema.safeParse(obj.sales).success
+      ? salesSettingsSchema.parse(obj.sales)
+      : DEFAULT_SALES_SETTINGS,
     onboardingCompleted: false,
     onboardingStep: 0,
     announcement:

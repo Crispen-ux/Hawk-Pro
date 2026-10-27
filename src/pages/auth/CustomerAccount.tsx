@@ -1,3 +1,4 @@
+import { orderItems } from "../../../db/checkout-model";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { request } from "@/lib/api";
@@ -74,7 +75,9 @@ export default function CustomerAccount() {
                       #{o.id.slice(0, 8).toUpperCase()}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {String(o.data.productName)} × {String(o.data.quantity)}
+                      {orderItems(o.data)
+                        .map((i) => i.name + " × " + i.quantity)
+                        .join(", ")}
                     </p>
                     {Boolean(o.data.tracking) && (
                       <p className="text-xs mt-2">
@@ -85,7 +88,9 @@ export default function CustomerAccount() {
                   <div className="text-right">
                     <p>{money(Number(o.data.total))}</p>
                     <p className="capitalize text-sm text-primary mt-1">
-                      {String(o.data.status)}
+                      {o.data.quoteRequired
+                        ? "Quote requested"
+                        : String(o.data.status)}
                     </p>
                   </div>
                 </article>

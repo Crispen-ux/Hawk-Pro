@@ -11,10 +11,12 @@ import { getAdminPasscode } from "./admin-session.ts";
 
 export class ApiError extends Error {
   readonly status: number;
+  readonly payload?: unknown;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, payload?: unknown) {
     super(message);
     this.status = status;
+    this.payload = payload;
     this.name = "ApiError";
   }
 }
@@ -59,7 +61,7 @@ export async function request<T>(
       typeof payload === "object" && payload !== null && "error" in payload
         ? String((payload as { error: unknown }).error)
         : `Request failed (${res.status})`;
-    throw new ApiError(message, res.status);
+    throw new ApiError(message, res.status, payload);
   }
   return payload as T;
 }

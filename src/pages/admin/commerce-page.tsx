@@ -1,3 +1,5 @@
+import { orderItems } from "../../../db/checkout-model";
+import { request } from "@/lib/api";
 import { useState } from "react";
 import { Plus, Search, Pencil, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,7 +61,12 @@ const fields: Record<CommerceKind, Field[]> = {
   ],
   inventory: [
     { key: "productId", label: "Product", type: "product", required: true },
-    { key: "quantity", label: "Units on hand", type: "number", required: true },
+    {
+      key: "quantity",
+      label: "Sale units / packs on hand",
+      type: "number",
+      required: true,
+    },
     {
       key: "threshold",
       label: "Low-stock alert threshold",
@@ -358,8 +365,14 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                       </td>
                       <td>{String(r.data.name)}</td>
                       <td>
-                        {productName(r.data.productId)} ×{" "}
-                        {String(r.data.quantity)}
+                        {orderItems(r.data)
+                          .map(
+                            (i) =>
+                              (i.name || productName(i.productId)) +
+                              " × " +
+                              i.quantity,
+                          )
+                          .join(", ")}
                       </td>
                       <td>{money(Number(r.data.total))}</td>
                       <td>
@@ -367,12 +380,81 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                           {String(r.data.status)}
                         </Badge>
                       </td>
-                      <td>{String(r.data.payment)}</td>
+                      <td>
+                        {String(r.data.payment)}
+                        {r.data.quoteRequired === true && (
+                          <span className="block text-xs text-primary">
+                            Quote request
+                          </span>
+                        )}
+                        {r.data.source === "storefront" &&
+                          r.data.confirmationEmail !== "sent" &&
+                          (r.data.payment === "paid" ||
+                            r.data.quoteRequired === true) && (
+                            <button
+                              type="button"
+                              className="block text-xs underline text-primary mt-1"
+                              onClick={async () => {
+                                try {
+                                  await request("/api/payflex", {
+                                    method: "POST",
+                                    body: { id: r.id },
+                                    admin: true,
+                                  });
+                                  await query.refetch();
+                                  setNotice("Confirmation email retried");
+                                } catch (e) {
+                                  setNotice(
+                                    e instanceof Error
+                                      ? e.message
+                                      : "Email could not be retried",
+                                  );
+                                }
+                              }}
+                            >
+                              Retry confirmation email
+                            </button>
+                          )}
+                        {r.data.paymentProvider === "payflex" && (
+                          <button
+                            type="button"
+                            className="block text-xs underline text-primary mt-1"
+                            onClick={async () => {
+                              try {
+                                await request("/api/payflex", {
+                                  method: "POST",
+                                  body: { id: r.id },
+                                  admin: true,
+                                });
+                                await query.refetch();
+                                setNotice("Payflex status refreshed");
+                              } catch (e) {
+                                setNotice(
+                                  e instanceof Error
+                                    ? e.message
+                                    : "Payment status could not be checked",
+                                );
+                              }
+                            }}
+                          >
+                            Refresh Payflex status
+                          </button>
+                        )}
+                      </td>
                     </>
                   ) : kind === "inventory" ? (
                     <>
                       <td>{productName(r.data.productId)}</td>
-                      <td>{String(r.data.quantity)}</td>
+                      <td>
+                        {String(r.data.quantity)}
+                        {Number(r.data.reserved ?? 0) > 0 && (
+                          <span className="block text-xs text-muted-foreground">
+                            {Number(r.data.reserved)} reserved ·{" "}
+                            {Number(r.data.quantity) - Number(r.data.reserved)}{" "}
+                            available
+                          </span>
+                        )}
+                      </td>
                       <td>{String(r.data.threshold)}</td>
                       <td>
                         <Badge
@@ -516,6 +598,11 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                   </select>
                 ) : f.options ? (
                   <select
+                    disabled={
+                      kind === "orders" &&
+                      editing?.data.paymentProvider === "payflex" &&
+                      f.key === "payment"
+                    }
                     className="block w-full border p-2 mt-1"
                     value={String(form[f.key] ?? "")}
                     onChange={(e) =>
@@ -528,6 +615,12 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                   </select>
                 ) : (
                   <Input
+                    readOnly={
+                      !!editing &&
+                      kind === "orders" &&
+                      editing.data.source === "storefront" &&
+                      ["name", "email", "address"].includes(f.key)
+                    }
                     className="mt-1"
                     required={f.required}
                     type={f.type ?? "text"}
@@ -550,6 +643,96 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                 )}
               </label>
             ))}
+            {kind === "orders" && editing?.data.quoteRequired === true && (
+              <label className="block text-sm">
+                Agreed goods subtotal (ZAR, optional)
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={String(form.goodsQuoteZar ?? "")}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      goodsQuoteZar:
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value),
+                    })
+                  }
+                />
+              </label>
+            )}
+            {kind === "orders" && editing?.data.quoteRequired === true && (
+              <label className="block text-sm">
+                Agreed delivery charge (ZAR)
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={String(form.deliveryQuoteZar ?? "")}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      deliveryQuoteZar:
+                        e.target.value === ""
+                          ? undefined
+                          : Number(e.target.value),
+                    })
+                  }
+                />
+                <span className="text-xs text-muted-foreground">
+                  Confirm this with the customer before recording payment.
+                </span>
+              </label>
+            )}
+            {kind === "orders" &&
+              editing?.data.paymentProvider === "payflex" &&
+              !editing.data.payflexOrderId && (
+                <div className="border p-4 space-y-3">
+                  <label className="block text-sm">
+                    Payflex order ID for reconciliation
+                    <Input
+                      value={String(form.providerOrderId ?? "")}
+                      onChange={(e) =>
+                        setForm({ ...form, providerOrderId: e.target.value })
+                      }
+                    />
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        await request("/api/payflex", {
+                          method: "POST",
+                          body: {
+                            id: editing.id,
+                            providerOrderId: form.providerOrderId,
+                          },
+                          admin: true,
+                        });
+                        await query.refetch();
+                        setNotice("Payment reconciled with Payflex");
+                        setOpen(false);
+                      } catch (e) {
+                        setNotice(
+                          e instanceof Error
+                            ? e.message
+                            : "Reconciliation failed",
+                        );
+                      }
+                    }}
+                  >
+                    Verify with Payflex
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Use the order ID from your Payflex merchant portal. The
+                    server verifies the reference and amount before making any
+                    change.
+                  </p>
+                </div>
+              )}
             {save.error && (
               <p role="alert" className="text-red-600 text-sm">
                 {save.error.message}

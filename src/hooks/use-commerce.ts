@@ -37,5 +37,6 @@ export const money = (n: number) =>
   new Intl.NumberFormat("en-ZA", {
     style: "currency",
     currency: "ZAR",
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
   }).format(n);

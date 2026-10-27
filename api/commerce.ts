@@ -1,3 +1,5 @@
+import { orderItems, toCents } from "../db/checkout-model";
+import { notifyOrder } from "./_lib/order-notification";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "../db/index.ts";
@@ -38,7 +40,7 @@ export default withErrors(async (req, res) => {
     sendJson(res, 400, { error: parsed.error.issues[0].message });
     return;
   }
-  const data: Record<string, unknown> = { ...parsed.data };
+  let data: Record<string, unknown> = { ...parsed.data };
   let old: typeof commerce.$inferSelect | undefined;
   if (body.id) {
     [old] = await db
@@ -50,24 +52,128 @@ export default withErrors(async (req, res) => {
       return;
     }
   }
+  if (old) data = { ...old.data, ...data };
+  if (body.kind === "inventory" && old) {
+    const reserved = Number(old.data.reserved ?? 0);
+    if (Number(data.quantity) < reserved) {
+      sendJson(res, 409, {
+        error:
+          "Stock on hand cannot be reduced below the quantity reserved by checkout.",
+      });
+      return;
+    }
+    data.reserved = reserved;
+  }
   if (body.kind === "orders") {
     if (!old && data.status !== "pending") {
       sendJson(res, 400, { error: "New orders must start as pending" });
       return;
     }
+    if (old?.data.source === "storefront") {
+      if (
+        data.productId !== old.data.productId ||
+        data.quantity !== old.data.quantity ||
+        data.name !== old.data.name ||
+        data.email !== old.data.email ||
+        data.address !== old.data.address
+      ) {
+        sendJson(res, 400, {
+          error:
+            "Web order items and customer details cannot be changed after checkout.",
+        });
+        return;
+      }
+      if (
+        old.data.paymentProvider === "payflex" &&
+        data.payment !== old.data.payment
+      ) {
+        sendJson(res, 400, {
+          error:
+            "Payflex payments must be verified using Refresh Payflex status.",
+        });
+        return;
+      }
+      if (
+        old.data.paymentProvider === "payflex" &&
+        data.status === "cancelled" &&
+        old.data.status !== "cancelled"
+      ) {
+        sendJson(res, 400, {
+          error:
+            "Refresh Payflex status for abandoned payments. Refunds are managed in Payflex; automatic refund synchronization is not included in this release.",
+        });
+        return;
+      }
+      if (
+        ["processing", "shipped", "delivered"].includes(String(data.status)) &&
+        data.payment !== "paid"
+      ) {
+        sendJson(res, 400, {
+          error:
+            "Confirm payment before processing or dispatching a web order.",
+        });
+        return;
+      }
+      if (
+        old.data.quoteRequired === true &&
+        typeof data.goodsQuoteZar === "number"
+      ) {
+        data.subtotalCents = toCents(data.goodsQuoteZar);
+        data.totalCents =
+          data.shippingCents === null
+            ? null
+            : Number(data.subtotalCents) + Number(data.shippingCents);
+        data.quoteAdjusted = true;
+      }
+      if (
+        old.data.quoteRequired === true &&
+        typeof data.deliveryQuoteZar === "number"
+      ) {
+        data.shippingCents = toCents(data.deliveryQuoteZar);
+        data.totalCents =
+          Number(data.subtotalCents ?? old.data.subtotalCents) +
+          Number(data.shippingCents);
+        data.total = Number(data.totalCents) / 100;
+      }
+      if (old.data.quoteRequired === true && data.payment === "paid") {
+        if (
+          orderItems(old.data).some((i) => i.unitPriceCents <= 0) &&
+          typeof data.goodsQuoteZar !== "number"
+        ) {
+          sendJson(res, 400, {
+            error:
+              "Enter the agreed goods subtotal for unpriced items before recording payment.",
+          });
+          return;
+        }
+        if (typeof data.deliveryQuoteZar !== "number") {
+          sendJson(res, 400, {
+            error:
+              "Enter the agreed delivery charge before recording a quote as paid.",
+          });
+          return;
+        }
+        data.quoteRequired = false;
+        data.confirmationEmail = "pending";
+      }
+    }
     const [product] = await db
       .select()
       .from(products)
       .where(eq(products.id, String(data.productId)));
-    if (!product) {
+    if (!product && !old) {
       sendJson(res, 400, { error: "Product not found" });
       return;
     }
     // Prices are always computed by the server and then snapshotted for reporting.
     data.total = old
-      ? old.data.total
-      : product.priceZar * Number(data.quantity);
-    data.productName = old?.data.productName ?? product.name;
+      ? old.data.quoteRequired === true &&
+        (typeof data.deliveryQuoteZar === "number" ||
+          typeof data.goodsQuoteZar === "number")
+        ? Number(data.totalCents ?? data.subtotalCents) / 100
+        : old.data.total
+      : product!.priceZar * Number(data.quantity);
+    data.productName = old?.data.productName ?? product!.name;
     if (
       old &&
       (data.productId !== old.data.productId ||
@@ -141,6 +247,16 @@ export default withErrors(async (req, res) => {
     }
   }
   let emailWarning: string | undefined;
+  if (
+    body.kind === "orders" &&
+    old?.data.source === "storefront" &&
+    old.data.payment !== "paid" &&
+    data.payment === "paid"
+  ) {
+    if (!(await notifyOrder(record.id)))
+      emailWarning =
+        "Payment recorded; the confirmation email is awaiting delivery.";
+  }
   if (body.kind === "orders" && (!old || old.data.status !== data.status))
     try {
       await sendEmail(
@@ -148,7 +264,13 @@ export default withErrors(async (req, res) => {
         old
           ? "Your Hawk order has been updated"
           : "Your Hawk order confirmation",
-        `Hi ${data.name},\nOrder ${record.id.slice(0, 8).toUpperCase()}\n${data.productName} × ${data.quantity}\nTotal: R ${Number(data.total).toFixed(2)}\nStatus: ${data.status}\n${data.tracking ? "Tracking: " + data.tracking : ""}`,
+        `Hi ${data.name},\nOrder ${record.id.slice(0, 8).toUpperCase()}\n${orderItems(
+          data,
+        )
+          .map((i) => i.name + " × " + i.quantity)
+          .join(
+            "; ",
+          )}\nTotal: R ${Number(data.total).toFixed(2)}\nStatus: ${data.status}\n${data.tracking ? "Tracking: " + data.tracking : ""}`,
       );
     } catch {
       emailWarning =

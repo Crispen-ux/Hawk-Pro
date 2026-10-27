@@ -1,3 +1,4 @@
+import SalesFields from "./sales-fields";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm, type Resolver } from "react-hook-form";
@@ -110,6 +111,7 @@ export default function AdminSettings() {
                 <StoreFields control={form.control} section={section} />
               </section>
             ))}
+            <SalesFields form={form} />
             <div className="flex flex-wrap items-center gap-4">
               <Button type="submit" size="lg" disabled={saving}>
                 <Save size={16} />

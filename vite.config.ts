@@ -14,6 +14,9 @@ type ApiRequest = IncomingMessage & {
 type Handler = (req: ApiRequest, res: ServerResponse) => void | Promise<void>;
 
 const API_ROUTES: { pattern: RegExp; file: string; params?: string[] }[] = [
+  { pattern: /^\/api\/delivery$/, file: "delivery.ts" },
+  { pattern: /^\/api\/checkout$/, file: "checkout.ts" },
+  { pattern: /^\/api\/payflex$/, file: "payflex.ts" },
   { pattern: /^\/api\/account$/, file: "account.ts" },
   { pattern: /^\/api\/commerce$/, file: "commerce.ts" },
   { pattern: /^\/api\/upload$/, file: "upload.ts" },
@@ -42,6 +45,10 @@ const HANDLER_ENV_KEYS = [
   "EMAIL_API_TOKEN",
   "EMAIL_FROM",
   "BLOB_READ_WRITE_TOKEN",
+  "PAYFLEX_CLIENT_ID",
+  "PAYFLEX_CLIENT_SECRET",
+  "PAYFLEX_ENVIRONMENT",
+  "SITE_URL",
 ] as const;
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {

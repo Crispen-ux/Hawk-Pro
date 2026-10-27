@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   type ReactNode,
@@ -14,7 +15,8 @@ type Action =
   | { type: "add"; productId: string; quantity: number }
   | { type: "set"; productId: string; quantity: number }
   | { type: "remove"; productId: string }
-  | { type: "clear" };
+  | { type: "clear" }
+  | { type: "purchased"; lines: CartLine[] };
 
 const STORAGE_KEY = "hawk-cart";
 const MAX_QTY = 99;
@@ -44,6 +46,14 @@ function reducer(state: CartLine[], action: Action): CartLine[] {
       );
     case "remove":
       return state.filter((l) => l.productId !== action.productId);
+    case "purchased":
+      return state.flatMap((line) => {
+        const bought =
+          action.lines.find((i) => i.productId === line.productId)?.quantity ??
+          0;
+        const quantity = line.quantity - bought;
+        return quantity > 0 ? [{ ...line, quantity }] : [];
+      });
     case "clear":
       return [];
   }
@@ -62,7 +72,10 @@ function load(): CartLine[] {
         typeof l === "object" &&
         l !== null &&
         typeof l.productId === "string" &&
-        typeof l.quantity === "number",
+        typeof l.quantity === "number" &&
+        Number.isInteger(l.quantity) &&
+        l.quantity >= 1 &&
+        l.quantity <= MAX_QTY,
     );
   } catch {
     return [];
@@ -79,6 +92,7 @@ type CartContextValue = {
   setQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clear: () => void;
+  removePurchased: (lines: CartLine[]) => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -97,11 +111,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       itemCount: items.reduce((n, i) => n + i.quantity, 0),
       subtotal: items.reduce((n, i) => n + i.product.priceZar * i.quantity, 0),
       addItem: (productId, quantity = 1) =>
-        dispatch({ type: "add", productId, quantity }),
+        dispatch({
+          type: "add",
+          productId,
+          quantity: Math.max(1, Math.min(MAX_QTY, Math.floor(quantity) || 1)),
+        }),
       setQuantity: (productId, quantity) =>
         dispatch({ type: "set", productId, quantity }),
       removeItem: (productId) => dispatch({ type: "remove", productId }),
       clear: () => dispatch({ type: "clear" }),
+      removePurchased: (lines) => dispatch({ type: "purchased", lines }),
     };
   }, [lines, products]);
 

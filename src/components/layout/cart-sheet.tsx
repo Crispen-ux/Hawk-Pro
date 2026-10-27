@@ -10,6 +10,7 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
+  SheetClose,
   SheetFooter,
   SheetHeader,
   SheetTitle,
@@ -44,7 +45,7 @@ export default function CartSheet() {
             Your cart
           </SheetTitle>
           <SheetDescription>
-            Checkout is coming soon — contact us to place your order.
+            Review your equipment, estimate delivery, and continue as a guest.
           </SheetDescription>
         </SheetHeader>
 
@@ -117,11 +118,16 @@ export default function CartSheet() {
             <span>Subtotal</span>
             <span>{formatZar(subtotal)}</span>
           </div>
-          <Button disabled className="w-full">
-            Checkout coming soon
-          </Button>
+          <SheetClose asChild>
+            <Button asChild className="w-full" disabled={!items.length}>
+              <Link to={items.length ? "/checkout" : "/shop"}>
+                {items.length ? "Checkout as guest" : "Browse products"}
+              </Link>
+            </Button>
+          </SheetClose>
           <p className="text-xs text-muted-foreground">
-            No payment is taken and no order is placed.
+            Delivery is calculated before payment. Cross-border and freight
+            orders can request a quote.
           </p>
         </SheetFooter>
       </SheetContent>

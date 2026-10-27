@@ -1,3 +1,4 @@
+import { orderItems } from "../../../../db/checkout-model";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -65,8 +66,9 @@ export default function AdminDashboard({
     .map((p) => ({
       ...p,
       sales: paid
-        .filter((o) => o.data.productId === p.id)
-        .reduce((s, o) => s + Number(o.data.quantity), 0),
+        .flatMap((o) => orderItems(o.data))
+        .filter((i) => i.productId === p.id)
+        .reduce((s, i) => s + i.quantity, 0),
     }))
     .sort((a, b) => b.sales - a.sales)
     .slice(0, 4);
