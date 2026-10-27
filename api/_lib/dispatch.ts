@@ -1,4 +1,4 @@
-import { adjustOrderStock } from "./stock-orders";
+import { adjustOrderStock } from "./stock-orders.ts";
 export function dispatchOrder(
   id: string,
   expected: Record<string, unknown>,

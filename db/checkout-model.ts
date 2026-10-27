@@ -1,6 +1,6 @@
-import { SOLD_AS_LABEL } from "./product-details";
-import type { ProductDetails } from "./product-details";
-import type { SalesSettings, EstimateInput } from "./sales-validation";
+import { SOLD_AS_LABEL } from "./product-details.ts";
+import type { ProductDetails } from "./product-details.ts";
+import type { SalesSettings, EstimateInput } from "./sales-validation.ts";
 export type QuoteProduct = {
   id: string;
   slug: string;

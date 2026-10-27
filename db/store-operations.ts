@@ -1,5 +1,5 @@
-import type { CommerceRecord } from "./commerce-validation";
-import { orderItems } from "./checkout-model";
+import type { CommerceRecord } from "./commerce-validation.ts";
+import { orderItems } from "./checkout-model.ts";
 export const amount = (v: unknown) =>
   Number.isFinite(Number(v)) ? Number(v) : 0;
 export const availableStock = (d: Record<string, unknown>) =>

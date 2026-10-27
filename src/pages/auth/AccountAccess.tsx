@@ -33,6 +33,7 @@ export default function AccountAccess({
     e.preventDefault();
     setBusy(true);
     setError("");
+    setMessage("");
     try {
       const result = await request<{ role?: string }>("/api/account", {
         method: "POST",
@@ -111,9 +112,7 @@ export default function AccountAccess({
             behind the scenes.
           </p>
         </div>
-        <p className="text-white/60 text-sm">
-          Hawk Pro Audio · South Africa
-        </p>
+        <p className="text-white/60 text-sm">Hawk Pro Audio · South Africa</p>
       </section>
       <main className="flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">

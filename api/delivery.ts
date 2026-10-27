@@ -1,6 +1,6 @@
-import { estimateInputSchema } from "../db/sales-validation";
-import { parseBody, sendJson, withErrors } from "./_lib/http";
-import { checkoutRateLimit, quoteFor } from "./_lib/checkout-common";
+import { estimateInputSchema } from "../db/sales-validation.ts";
+import { parseBody, sendJson, withErrors } from "./_lib/http.ts";
+import { checkoutRateLimit, quoteFor } from "./_lib/checkout-common.ts";
 export default withErrors(async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") {

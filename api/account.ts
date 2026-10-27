@@ -1,4 +1,4 @@
-import { secureToken } from "./_lib/checkout-common";
+import { secureToken } from "./_lib/checkout-common.ts";
 import { and, eq, gt, sql } from "drizzle-orm";
 import {
   randomBytes,
@@ -212,11 +212,27 @@ export default withErrors(async (req, res) => {
         });
         return;
       }
-      await sendEmail(
-        email,
-        "Your Hawk verification code",
-        `Your code is ${code}.\nIt expires in 10 minutes. Never share this code.\nIf you did not request this, ignore this email.`,
-      );
+      try {
+        await sendEmail(
+          email,
+          "Your Hawk verification code",
+          `Your code is ${code}.\nIt expires in 10 minutes. Never share this code.\nIf you did not request this, ignore this email.`,
+        );
+      } catch {
+        await db
+          .delete(challenges)
+          .where(
+            and(
+              eq(challenges.id, inserted[0].id),
+              eq(challenges.hash, digest(code)),
+            ),
+          );
+        sendJson(res, 503, {
+          error:
+            "We could not send your verification code. Please try again later or contact the store.",
+        });
+        return;
+      }
     }
     sendJson(res, 200, {
       ok: true,

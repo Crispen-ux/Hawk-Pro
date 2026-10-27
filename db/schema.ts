@@ -1,7 +1,7 @@
 import {
   DEFAULT_PRODUCT_DETAILS,
   type ProductDetails,
-} from "./product-details";
+} from "./product-details.ts";
 import { sql } from "drizzle-orm";
 import {
   boolean,

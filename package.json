@@ -6,14 +6,15 @@
   "scripts": {
     "dev": "vite",
     "preview": "vite preview",
-    "build": "tsc -b && vite build",
+    "build": "npm run test:server-imports && tsc -b && vite build",
     "test": "vitest run --pool=threads --maxWorkers=1",
     "lint": "eslint . --max-warnings=0",
     "prettier-fix": "prettier --write .",
     "prettier-check": "prettier --check .",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test:server-imports": "node qa/server-imports.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",

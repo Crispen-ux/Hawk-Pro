@@ -1,11 +1,11 @@
 import {
   productDetailsSchema,
   DEFAULT_PRODUCT_DETAILS,
-} from "./product-details";
+} from "./product-details.ts";
 import {
   salesSettingsSchema,
   DEFAULT_SALES_SETTINGS,
-} from "./sales-validation";
+} from "./sales-validation.ts";
 import { z } from "zod";
 
 // Shared between the Vercel API handlers and the admin form so both sides

@@ -1,23 +1,23 @@
 import { and, eq, sql } from "drizzle-orm";
-import { getDb } from "../db/index";
-import { commerce } from "../db/schema";
-import { checkoutInputSchema } from "../db/sales-validation";
-import { parseBody, sendJson, withErrors } from "./_lib/http";
+import { getDb } from "../db/index.ts";
+import { commerce } from "../db/schema.ts";
+import { checkoutInputSchema } from "../db/sales-validation.ts";
+import { parseBody, sendJson, withErrors } from "./_lib/http.ts";
 import {
   checkoutRateLimit,
   checkoutHash,
   quoteFor,
   receipt,
   secureToken,
-} from "./_lib/checkout-common";
+} from "./_lib/checkout-common.ts";
 import {
   createPayflexOrder,
   PayflexRejected,
   payflexReady,
   siteUrl,
-} from "./_lib/payflex-client";
-import { reserveOrder, adjustOrderStock } from "./_lib/stock-orders";
-import { notifyOrder } from "./_lib/order-notification";
+} from "./_lib/payflex-client.ts";
+import { reserveOrder, adjustOrderStock } from "./_lib/stock-orders.ts";
+import { notifyOrder } from "./_lib/order-notification.ts";
 export default withErrors(async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") {

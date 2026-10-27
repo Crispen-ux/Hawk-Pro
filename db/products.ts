@@ -1,4 +1,4 @@
-import { normaliseProductDetails } from "./product-details";
+import { normaliseProductDetails } from "./product-details.ts";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb } from "./index.ts";
 import {

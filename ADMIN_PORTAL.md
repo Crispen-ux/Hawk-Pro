@@ -57,3 +57,9 @@ Speaker details, delivery estimates and guest Payflex checkout are implemented. 
 ## Store operations
 
 See [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md) for customer tracking, customer profiles and consent, stock movement history, revenue reports and campaign monitoring.
+
+## Server startup verification
+
+Server-side relative imports include their `.ts` extensions so Node.js 24 can load the API modules directly. `npm run build` runs `npm run test:server-imports` before type checking and the frontend build. Use Node.js 24 as specified by `package.json`. This check imports all API entry points without issuing requests or writing to the database.
+
+A `FUNCTION_INVOCATION_FAILED` response means a function failed before it returned a normal application response. After updating the code, redeploy and verify `/api/account` returns 401 for a signed-out browser, then test password → emailed OTP → verified session. Database and email environment variables must be configured on that deployment. Failed OTP delivery returns a readable 503 response and removes the undelivered challenge so it does not leave a resend cooldown behind.

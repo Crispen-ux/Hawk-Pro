@@ -1,5 +1,5 @@
-import { orderItems, toCents } from "../db/checkout-model";
-import { notifyOrder } from "./_lib/order-notification";
+import { orderItems, toCents } from "../db/checkout-model.ts";
+import { notifyOrder } from "./_lib/order-notification.ts";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "../db/index.ts";
@@ -7,8 +7,8 @@ import { commerce, products } from "../db/schema.ts";
 import { recordSchemas, type CommerceKind } from "../db/commerce-validation.ts";
 import { parseBody, requireAdmin, sendJson, withErrors } from "./_lib/http.ts";
 import { dispatchOrder } from "./_lib/dispatch.ts";
-import { notifyFulfillment } from "./_lib/fulfillment-notification";
-import { updateFulfillment, amount } from "../db/store-operations";
+import { notifyFulfillment } from "./_lib/fulfillment-notification.ts";
+import { updateFulfillment, amount } from "../db/store-operations.ts";
 export default withErrors(async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (!(await requireAdmin(req, res))) return;

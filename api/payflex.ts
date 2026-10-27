@@ -1,16 +1,16 @@
-import { notifyFulfillment } from "./_lib/fulfillment-notification";
+import { notifyFulfillment } from "./_lib/fulfillment-notification.ts";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
-import { getDb } from "../db/index";
-import { commerce } from "../db/schema";
-import { parseBody, requireAdmin, sendJson, withErrors } from "./_lib/http";
+import { getDb } from "../db/index.ts";
+import { commerce } from "../db/schema.ts";
+import { parseBody, requireAdmin, sendJson, withErrors } from "./_lib/http.ts";
 import {
   receipt,
   sameSecret,
   secureToken,
   checkoutRateLimit,
-} from "./_lib/checkout-common";
-import { reconcilePayflex } from "./_lib/payflex-reconcile";
+} from "./_lib/checkout-common.ts";
+import { reconcilePayflex } from "./_lib/payflex-reconcile.ts";
 export default withErrors(async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (req.method === "GET") {

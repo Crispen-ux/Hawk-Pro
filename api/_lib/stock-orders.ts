@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
-import { databaseUrl } from "../../db/index";
-import { orderItems } from "../../db/checkout-model";
+import { databaseUrl } from "../../db/index.ts";
+import { orderItems } from "../../db/checkout-model.ts";
 export type StoredOrder = {
   id: string;
   kind: string;

@@ -1,10 +1,10 @@
 import { and, eq, sql } from "drizzle-orm";
-import { getDb } from "../../db/index";
-import { commerce } from "../../db/schema";
-import { toCents } from "../../db/checkout-model";
-import { getPayflexOrder, type payflexOrderSchema } from "./payflex-client";
-import { adjustOrderStock } from "./stock-orders";
-import { notifyOrder } from "./order-notification";
+import { getDb } from "../../db/index.ts";
+import { commerce } from "../../db/schema.ts";
+import { toCents } from "../../db/checkout-model.ts";
+import { getPayflexOrder, type payflexOrderSchema } from "./payflex-client.ts";
+import { adjustOrderStock } from "./stock-orders.ts";
+import { notifyOrder } from "./order-notification.ts";
 import type { z } from "zod";
 export function verifyPayflexOrder(
   remote: z.infer<typeof payflexOrderSchema>,

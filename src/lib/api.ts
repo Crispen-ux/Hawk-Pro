@@ -21,6 +21,27 @@ export class ApiError extends Error {
   }
 }
 
+export function apiErrorMessage(payload: unknown, status: number): string {
+  if (payload && typeof payload === "object") {
+    const body = payload as Record<string, unknown>;
+    const error = body.error;
+    if (typeof error === "string" && error.trim()) return error;
+    if (
+      error &&
+      typeof error === "object" &&
+      "message" in error &&
+      typeof error.message === "string" &&
+      error.message.trim()
+    )
+      return error.message;
+    if (typeof body.message === "string" && body.message.trim())
+      return body.message;
+  }
+  return status >= 500
+    ? "The service is temporarily unavailable. Please try again shortly."
+    : "Request failed (" + status + "). Please try again.";
+}
+
 type RequestOptions = {
   method?: string;
   body?: unknown;
@@ -57,10 +78,7 @@ export async function request<T>(
   }
 
   if (!res.ok) {
-    const message =
-      typeof payload === "object" && payload !== null && "error" in payload
-        ? String((payload as { error: unknown }).error)
-        : `Request failed (${res.status})`;
+    const message = apiErrorMessage(payload, res.status);
     throw new ApiError(message, res.status, payload);
   }
   return payload as T;

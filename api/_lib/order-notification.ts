@@ -1,10 +1,10 @@
 import { and, eq, sql } from "drizzle-orm";
-import { getDb } from "../../db/index";
-import { commerce } from "../../db/schema";
-import { orderItems } from "../../db/checkout-model";
-import { sendEmail } from "./email";
-import { secureToken } from "./checkout-common";
-import { siteUrl } from "./payflex-client";
+import { getDb } from "../../db/index.ts";
+import { commerce } from "../../db/schema.ts";
+import { orderItems } from "../../db/checkout-model.ts";
+import { sendEmail } from "./email.ts";
+import { secureToken } from "./checkout-common.ts";
+import { siteUrl } from "./payflex-client.ts";
 export async function notifyOrder(id: string) {
   const db = getDb();
   const [claimed] = await db

@@ -1,11 +1,11 @@
 import { and, eq, sql } from "drizzle-orm";
-import { getDb } from "../../db/index";
-import { commerce } from "../../db/schema";
-import { sendEmail } from "./email";
-import { secureToken } from "./checkout-common";
-import { siteUrl } from "./payflex-client";
-import { orderItems } from "../../db/checkout-model";
-import { safeTrackingUrl } from "../../db/store-operations";
+import { getDb } from "../../db/index.ts";
+import { commerce } from "../../db/schema.ts";
+import { sendEmail } from "./email.ts";
+import { secureToken } from "./checkout-common.ts";
+import { siteUrl } from "./payflex-client.ts";
+import { orderItems } from "../../db/checkout-model.ts";
+import { safeTrackingUrl } from "../../db/store-operations.ts";
 export async function notifyFulfillment(id: string) {
   const db = getDb();
   const [order] = await db
