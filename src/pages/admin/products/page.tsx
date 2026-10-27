@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { PackageXIcon, PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import {
+  CopyIcon,
+  PackageXIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -250,6 +256,15 @@ export default function AdminProducts() {
                         aria-label={`Edit ${product.name}`}
                       >
                         <PencilIcon />
+                      </Link>
+                    </Button>
+                    <Button asChild variant="ghost" size="icon">
+                      <Link
+                        to={"/admin/products/new?duplicate=" + product.id}
+                        aria-label={"Duplicate " + product.name}
+                        title="Duplicate product"
+                      >
+                        <CopyIcon />
                       </Link>
                     </Button>
                     <Button

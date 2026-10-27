@@ -1,3 +1,7 @@
+import {
+  duplicateProduct,
+  generateProductDescription,
+} from "@/lib/product-authoring";
 import ProductImageScale from "../product-image-scale";
 import ProductImageUploader from "../product-image-uploader";
 import ProductDetailsFields from "../product-details-fields";
@@ -6,7 +10,12 @@ import {
   normaliseProductDetails,
 } from "../../../../../db/product-details";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import {
   useForm,
   useFieldArray,
@@ -89,8 +98,13 @@ export default function AdminProductEditor() {
   const { id = "" } = useParams();
   const isNew = id === "new";
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const duplicateId = isNew ? searchParams.get("duplicate") : null;
+  const [generated, setGenerated] = useState<ReturnType<
+    typeof generateProductDescription
+  > | null>(null);
 
-  const [loading, setLoading] = useState(!isNew);
+  const [loading, setLoading] = useState(!isNew || !!duplicateId);
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -117,12 +131,20 @@ export default function AdminProductEditor() {
   });
 
   useEffect(() => {
-    if (isNew) return;
+    if (isNew && !duplicateId) {
+      form.reset(DEFAULT_VALUES);
+      return;
+    }
     let cancelled = false;
-    fetchProduct(id)
+    fetchProduct(duplicateId || id)
       .then((row) => {
         if (cancelled) return;
         setProduct(row);
+        if (duplicateId) {
+          const copy = duplicateProduct(row, crypto.randomUUID().slice(0, 8));
+          form.reset({ ...copy, priceZar: String(copy.priceZar) });
+          return;
+        }
         form.reset({
           name: row.name,
           slug: row.slug,
@@ -147,7 +169,7 @@ export default function AdminProductEditor() {
     return () => {
       cancelled = true;
     };
-  }, [form, id, isNew]);
+  }, [form, id, isNew, duplicateId]);
 
   const addImage = () => {
     if (uploading || saving) return;
@@ -252,6 +274,16 @@ export default function AdminProductEditor() {
         </div>
       </header>
 
+      {duplicateId && (
+        <Alert>
+          <AlertTitle>Duplicated product draft</AlertTitle>
+          <AlertDescription>
+            Review the copied photos, specifications and price. Add a new SKU
+            and confirm availability. Stock quantities and order history are not
+            copied. Nothing is created until you save.
+          </AlertDescription>
+        </Alert>
+      )}
       {error && (
         <Alert variant="destructive" role="alert">
           <AlertTitle>Could not save</AlertTitle>
@@ -325,6 +357,75 @@ export default function AdminProductEditor() {
                 placeholder="What it is, who it is for, and what it sounds like."
               />
 
+              <div className="space-y-3 border p-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={saving}
+                  onClick={() => {
+                    try {
+                      setGenerated(
+                        generateProductDescription(form.getValues()),
+                      );
+                    } catch (error) {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : "Could not generate description",
+                      );
+                    }
+                  }}
+                >
+                  <SparklesIcon /> Generate description
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Build a draft from the product name, category, speaker details
+                  and specifications. Enter verified details first, then review
+                  the wording before applying. No API key required.
+                </p>
+                {generated && (
+                  <div className="space-y-3 border-t pt-3">
+                    <h3 className="font-semibold">Description draft</h3>
+                    <p className="text-sm font-medium">
+                      {generated.shortDescription}
+                    </p>
+                    <p className="whitespace-pre-line text-sm text-muted-foreground">
+                      {generated.description}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Applying replaces both description fields. Changes are
+                      saved with the product.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => {
+                          form.setValue(
+                            "shortDescription",
+                            generated.shortDescription,
+                            { shouldDirty: true, shouldValidate: true },
+                          );
+                          form.setValue("description", generated.description, {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+                          setGenerated(null);
+                        }}
+                      >
+                        Apply draft
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setGenerated(null)}
+                      >
+                        Discard
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="priceZar">Price (ZAR)</Label>
