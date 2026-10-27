@@ -21,7 +21,7 @@ export default function ProductCard({ product }: { product: Product }) {
           src={product.images[0]}
           alt={product.name}
           loading="lazy"
-          className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="absolute inset-0 size-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02] sm:p-6"
         />
         <span className="absolute left-3 top-3 bg-background/90 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider">
           {AVAILABILITY_LABEL[product.availability]}
