@@ -177,6 +177,7 @@ export const checkoutInputSchema = estimateInputSchema.extend({
     billingCountry: countrySchema.default("ZA"),
   }),
   consent: z.literal(true),
+  marketingConsent: z.boolean().default(false),
   notes: z.string().trim().max(1500).default(""),
 });
 export type CheckoutInput = z.infer<typeof checkoutInputSchema>;

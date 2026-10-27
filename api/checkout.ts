@@ -119,6 +119,8 @@ export default withErrors(async (req, res) => {
     taxIncludedCents: quote.taxIncludedCents,
     delivery: quote,
     notes: input.notes,
+    marketingConsent: input.marketingConsent,
+    fulfillmentEvents: [{ status: "pending", at: new Date().toISOString() }],
     status: "pending",
     payment: "unpaid",
     paymentProvider: isQuote ? null : "payflex",

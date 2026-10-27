@@ -1,3 +1,4 @@
+import { secureToken } from "./_lib/checkout-common";
 import { and, eq, gt, sql } from "drizzle-orm";
 import {
   randomBytes,
@@ -59,7 +60,10 @@ export default withErrors(async (req, res) => {
       );
     sendJson(res, 200, {
       user: { name: a.name, email: a.email, role: a.role },
-      orders,
+      orders: orders.map((o) => ({
+        ...o,
+        trackingPath: "/orders/" + o.id + "/" + secureToken(o.id, "guest"),
+      })),
     });
     return;
   }

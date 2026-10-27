@@ -1,3 +1,4 @@
+import { notifyFulfillment } from "./_lib/fulfillment-notification";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "../db/index";
@@ -21,6 +22,18 @@ export default withErrors(async (req, res) => {
     }
     if (!(await checkoutRateLimit(req, res, 150))) return;
     try {
+      if (req.query?.tracking === "1") {
+        const [order] = await getDb()
+          .select()
+          .from(commerce)
+          .where(and(eq(commerce.id, id.data), eq(commerce.kind, "orders")));
+        if (!order) {
+          sendJson(res, 404, { error: "Order not found" });
+          return;
+        }
+        sendJson(res, 200, { receipt: receipt(order) });
+        return;
+      }
       const result = await reconcilePayflex(id.data);
       sendJson(res, 200, {
         receipt: receipt(result.order),
@@ -69,9 +82,22 @@ export default withErrors(async (req, res) => {
   const body = await parseBody(
     req,
     res,
-    z.object({ id: z.uuid(), providerOrderId: z.uuid().optional() }),
+    z.object({
+      id: z.uuid(),
+      providerOrderId: z.uuid().optional(),
+      notification: z.literal("fulfillment").optional(),
+    }),
   );
   if (!body) return;
+  if (body.notification === "fulfillment") {
+    const delivered = await notifyFulfillment(body.id);
+    sendJson(res, 200, {
+      emailWarning: delivered
+        ? undefined
+        : "Status email is still awaiting delivery.",
+    });
+    return;
+  }
   const result = await reconcilePayflex(body.id, body.providerOrderId);
   sendJson(res, 200, {
     receipt: receipt(result.order),

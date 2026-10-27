@@ -1,3 +1,4 @@
+import OrderProgress from "@/components/orders/order-progress";
 import {
   getCheckoutAttempt,
   clearCheckoutAttempt,
@@ -22,18 +23,27 @@ type Receipt = {
   payment: string;
   paymentState: string;
   status: string;
+  courier?: string;
+  tracking?: string;
+  trackingUrl?: string;
+  estimatedDelivery?: string;
+  fulfillmentEvents?: unknown;
   quoteRequired: boolean;
   priceOnRequest?: boolean;
   quoteAdjusted?: boolean;
 };
-export default function CheckoutReturn() {
+export default function CheckoutReturn({
+  trackingOnly = false,
+}: {
+  trackingOnly?: boolean;
+}) {
   const { orderId = "", access = "" } = useParams();
   const { settings } = useSiteSettings();
   const cart = useCart();
   const attempts = useRef(0),
     applied = useRef(false);
   const query = useQuery({
-    queryKey: ["guest-order", orderId, access],
+    queryKey: ["guest-order", orderId, access, trackingOnly],
     enabled: !!orderId && !!access,
     queryFn: async () => {
       attempts.current++;
@@ -45,12 +55,14 @@ export default function CheckoutReturn() {
         "/api/payflex?order=" +
           encodeURIComponent(orderId) +
           "&access=" +
-          encodeURIComponent(access),
+          encodeURIComponent(access) +
+          (trackingOnly ? "&tracking=1" : ""),
       );
     },
     retry: false,
     refetchInterval: (q) => {
       const r = q.state.data?.receipt;
+      if (trackingOnly) return false;
       return attempts.current >= 12 ||
         r?.payment === "paid" ||
         r?.quoteRequired ||
@@ -107,26 +119,32 @@ export default function CheckoutReturn() {
           HAWK / {quoted ? "Quote request" : "Order status"}
         </p>
         <h1 className="font-serif text-5xl uppercase font-extrabold">
-          {paid
-            ? "Your sound is on its way."
-            : quoted
-              ? "Your request is with us."
-              : failed
-                ? receipt?.quoteRequired
-                  ? "Quote request cancelled"
-                  : "Payment not completed"
-                : query.error
-                  ? "We are checking your order."
-                  : "Checking your payment…"}
+          {trackingOnly
+            ? "Your HAWK order"
+            : paid
+              ? trackingOnly
+                ? "Your HAWK order"
+                : "Payment confirmed."
+              : quoted
+                ? "Your request is with us."
+                : failed
+                  ? receipt?.quoteRequired
+                    ? "Quote request cancelled"
+                    : "Payment not completed"
+                  : query.error
+                    ? "We are checking your order."
+                    : "Checking your payment…"}
         </h1>
         <p className="text-muted-foreground">
-          {paid
-            ? "Your payment has been verified. We will email your confirmation and delivery updates."
-            : quoted
-              ? "No payment has been taken. Our team will confirm availability, delivery costs and payment arrangements."
-              : failed
-                ? "This payment was not completed. No paid order has been confirmed. Your cart is still available."
-                : "We confirm payment directly with Payflex. A browser redirect alone never marks an order paid."}
+          {trackingOnly
+            ? "View the latest order and delivery updates below. Contact the store if you need help with your order."
+            : paid
+              ? "Your payment has been verified. We will email your confirmation and delivery updates."
+              : quoted
+                ? "No payment has been taken. Our team will confirm availability, delivery costs and payment arrangements."
+                : failed
+                  ? "This payment was not completed. No paid order has been confirmed. Your cart is still available."
+                  : "Your payment is awaiting confirmation. You can refresh this page to check for an update."}
         </p>
       </header>
       {query.error && (
@@ -210,7 +228,17 @@ export default function CheckoutReturn() {
           )}
         </section>
       )}
+      {receipt && <OrderProgress {...receipt} />}
       <div className="flex flex-wrap gap-3 justify-center">
+        {receipt && (
+          <Button
+            variant="outline"
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            {query.isFetching ? "Refreshing…" : "Refresh order updates"}
+          </Button>
+        )}
         <Button asChild>
           <Link to="/shop">
             <Package size={16} />
@@ -220,7 +248,7 @@ export default function CheckoutReturn() {
         {paid && (
           <Button variant="outline" asChild>
             <Link to="/account/signup">
-              Create an account to track your orders
+              Create an account for your order history
             </Link>
           </Button>
         )}
@@ -253,7 +281,7 @@ export default function CheckoutReturn() {
             Resume Payflex checkout
           </Button>
         )}
-        {receipt && !paid && !quoted && !failed && (
+        {receipt && !trackingOnly && !paid && !quoted && !failed && (
           <Button variant="outline" onClick={() => void query.refetch()}>
             Refresh payment status
           </Button>

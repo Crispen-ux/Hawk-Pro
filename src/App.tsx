@@ -25,6 +25,8 @@ import AdminEnquiries from "./pages/admin/enquiries/page.tsx";
 import AdminSettings from "./pages/admin/settings/page.tsx";
 import StoreOnboarding from "./pages/admin/onboarding/page";
 
+const CustomersPage = lazy(() => import("./pages/admin/customers/page"));
+const ReportsPage = lazy(() => import("./pages/admin/reports/page"));
 const CommercePage = lazy(() => import("./pages/admin/commerce-page"));
 import AccountAccess from "./pages/auth/AccountAccess";
 import CustomerAccount from "./pages/auth/CustomerAccount";
@@ -92,15 +94,12 @@ export default function App() {
                 path="inventory"
                 element={<CommercePage kind="inventory" />}
               />
-              <Route
-                path="customers"
-                element={<CommercePage kind="customers" />}
-              />
+              <Route path="customers" element={<CustomersPage />} />
               <Route
                 path="campaigns"
                 element={<CommercePage kind="campaigns" />}
               />
-              <Route path="reports" element={<AdminDashboard reports />} />
+              <Route path="reports" element={<ReportsPage />} />
               <Route path="*" element={<Navigate to="/admin" replace />} />
             </Route>
             <Route element={<SiteLayout />}>
@@ -112,6 +111,10 @@ export default function App() {
                 element={<CheckoutReturn />}
               />
               <Route path="/checkout/return" element={<CheckoutReturn />} />
+              <Route
+                path="/orders/:orderId/:access"
+                element={<CheckoutReturn trackingOnly />}
+              />
               <Route path="/shop/:slug" element={<ProductPage />} />
               <Route path="/rentals" element={<RentalsPage />} />
               <Route path="/repairs" element={<RepairsPage />} />

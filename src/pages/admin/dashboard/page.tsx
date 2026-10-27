@@ -1,3 +1,7 @@
+import {
+  availableStock,
+  customerProfiles,
+} from "../../../../db/store-operations";
 import { orderItems } from "../../../../db/checkout-model";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -42,10 +46,10 @@ export default function AdminDashboard({
     (r) => r.data.payment === "paid" && r.data.status !== "cancelled",
   );
   const revenue = paid.reduce((s, r) => s + Number(r.data.total), 0);
-  const customers = (records.data ?? []).filter((r) => r.kind === "customers");
+  const customers = customerProfiles(records.data ?? []);
   const stock = (records.data ?? []).filter((r) => r.kind === "inventory");
   const low = stock.filter(
-    (r) => Number(r.data.quantity) <= Number(r.data.threshold),
+    (r) => availableStock(r.data) <= Number(r.data.threshold),
   );
   const chart = Array.from({ length: 7 }, (_, i) => {
     const start = new Date(Date.now() - (((7 - i) * days) / 7) * 86400000);
@@ -184,7 +188,7 @@ export default function AdminDashboard({
               {
                 label: "Customers",
                 value: customers.length,
-                hint: "Customer directory",
+                hint: "Guest shoppers and customer directory",
                 icon: Users,
                 color: "text-foreground bg-muted",
               },

@@ -7,7 +7,8 @@ import { commerce, products } from "../db/schema.ts";
 import { recordSchemas, type CommerceKind } from "../db/commerce-validation.ts";
 import { parseBody, requireAdmin, sendJson, withErrors } from "./_lib/http.ts";
 import { dispatchOrder } from "./_lib/dispatch.ts";
-import { sendEmail } from "./_lib/email.ts";
+import { notifyFulfillment } from "./_lib/fulfillment-notification";
+import { updateFulfillment, amount } from "../db/store-operations";
 export default withErrors(async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   if (!(await requireAdmin(req, res))) return;
@@ -53,6 +54,32 @@ export default withErrors(async (req, res) => {
     }
   }
   if (old) data = { ...old.data, ...data };
+  if (body.kind === "inventory") {
+    const changed = !old || data.quantity !== old.data.quantity;
+    if (changed && !String(data.adjustmentReason ?? "").trim()) {
+      sendJson(res, 400, { error: "Add a reason for this stock adjustment." });
+      return;
+    }
+    if (old && old.data.productId !== data.productId) {
+      sendJson(res, 400, {
+        error: "A stock record cannot be moved to a different product.",
+      });
+      return;
+    }
+    if (changed)
+      data.movements = [
+        ...(Array.isArray(old?.data.movements) ? old.data.movements : []).slice(
+          -99,
+        ),
+        {
+          at: new Date().toISOString(),
+          delta: amount(data.quantity) - amount(old?.data.quantity),
+          balance: data.quantity,
+          reason: data.adjustmentReason,
+          type: "adjustment",
+        },
+      ];
+  }
   if (body.kind === "inventory" && old) {
     const reserved = Number(old.data.reserved ?? 0);
     if (Number(data.quantity) < reserved) {
@@ -184,6 +211,11 @@ export default withErrors(async (req, res) => {
       });
       return;
     }
+    if (data.payment === "paid" && old?.data.payment !== "paid")
+      data.paidAt = new Date().toISOString();
+    if (data.payment === "refunded" && old?.data.payment !== "refunded")
+      data.refundedAt = new Date().toISOString();
+    data = updateFulfillment(old?.data, data);
     const allowed: Record<string, string[]> = {
       pending: ["pending", "processing", "cancelled"],
       processing: ["processing", "shipped", "cancelled"],
@@ -208,6 +240,36 @@ export default withErrors(async (req, res) => {
       sendJson(res, 409, {
         error: "Edit the existing stock record for this product",
       });
+      return;
+    }
+  }
+  if (body.kind === "customers") {
+    const customers = await db
+      .select()
+      .from(commerce)
+      .where(eq(commerce.kind, "customers"));
+    if (
+      customers.some(
+        (r) =>
+          r.id !== old?.id && String(r.data.email).toLowerCase() === data.email,
+      )
+    ) {
+      sendJson(res, 409, {
+        error:
+          "A customer with this email already exists. Edit their existing record.",
+      });
+      return;
+    }
+    if (!old || data.consent !== old.data.consent)
+      data.marketingPreferenceAt = new Date().toISOString();
+  }
+  if (body.kind === "inventory" && !old) {
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, String(data.productId)));
+    if (!product) {
+      sendJson(res, 400, { error: "Product not found" });
       return;
     }
   }
@@ -257,24 +319,10 @@ export default withErrors(async (req, res) => {
       emailWarning =
         "Payment recorded; the confirmation email is awaiting delivery.";
   }
-  if (body.kind === "orders" && (!old || old.data.status !== data.status))
-    try {
-      await sendEmail(
-        String(data.email),
-        old
-          ? "Your Hawk order has been updated"
-          : "Your Hawk order confirmation",
-        `Hi ${data.name},\nOrder ${record.id.slice(0, 8).toUpperCase()}\n${orderItems(
-          data,
-        )
-          .map((i) => i.name + " × " + i.quantity)
-          .join(
-            "; ",
-          )}\nTotal: R ${Number(data.total).toFixed(2)}\nStatus: ${data.status}\n${data.tracking ? "Tracking: " + data.tracking : ""}`,
-      );
-    } catch {
+  if (body.kind === "orders" && record.data.fulfillmentEmail === "pending") {
+    if (!(await notifyFulfillment(record.id)))
       emailWarning =
-        "Order saved, but email delivery failed. Check email configuration.";
-    }
+        "Order saved. Its status email is awaiting delivery; retry it from Orders.";
+  }
   sendJson(res, 200, { record, emailWarning });
 });

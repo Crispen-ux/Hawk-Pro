@@ -35,6 +35,9 @@ vi.mock("../../api/_lib/payflex-client", () => ({
 vi.mock("../../api/_lib/order-notification", () => ({
   notifyOrder: vi.fn().mockResolvedValue(true),
 }));
+vi.mock("../../api/_lib/rate-limit", () => ({
+  allowAuth: vi.fn().mockResolvedValue(true),
+}));
 vi.mock("../../api/_lib/stock-orders", () => ({ adjustOrderStock: vi.fn() }));
 import { getPayflexOrder } from "../../api/_lib/payflex-client";
 import {
@@ -210,5 +213,61 @@ describe("Payflex callback trust boundary", () => {
     expect(res.statusCode).toBe(403);
     expect(getPayflexOrder).not.toHaveBeenCalled();
     expect(state.updates).toBe(0);
+  });
+});
+
+describe("guest tracking access", () => {
+  async function readTracking(access: string) {
+    let body = "";
+    const res = {
+      statusCode: 200,
+      writableEnded: false,
+      setHeader() {},
+      end(value: string) {
+        body = value;
+      },
+    } as unknown as ApiResponse;
+    await callbackHandler(
+      {
+        method: "GET",
+        url: "/api/payflex",
+        headers: {},
+        query: { order: ORDER_ID, access, tracking: "1" },
+      } as unknown as ApiRequest,
+      res,
+    );
+    return { status: res.statusCode, body: JSON.parse(body) };
+  }
+  it("returns sanitized shipment details without contacting Payflex", async () => {
+    vi.stubEnv(
+      "SESSION_SECRET",
+      "test-signing-secret-that-is-at-least-32-characters",
+    );
+    Object.assign(state.order!.data, {
+      name: "Private Name",
+      email: "private@hawk.example",
+      address: "Private address",
+      courier: "Courier",
+      tracking: "SHIP42",
+      trackingUrl: "https://courier.example/SHIP42",
+      status: "shipped",
+    });
+    const result = await readTracking(secureToken(ORDER_ID, "guest"));
+    expect(result.status).toBe(200);
+    expect(result.body.receipt.courier).toBe("Courier");
+    expect(JSON.stringify(result.body)).not.toContain("Private");
+    expect(JSON.stringify(result.body)).not.toContain("private@");
+    expect(getPayflexOrder).not.toHaveBeenCalled();
+    expect(state.updates).toBe(0);
+  });
+  it("rejects an invalid or different-order token", async () => {
+    vi.stubEnv(
+      "SESSION_SECRET",
+      "test-signing-secret-that-is-at-least-32-characters",
+    );
+    expect((await readTracking(secureToken(PRODUCT_ID, "guest"))).status).toBe(
+      404,
+    );
+    expect(getPayflexOrder).not.toHaveBeenCalled();
   });
 });

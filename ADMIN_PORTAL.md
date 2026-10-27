@@ -53,3 +53,7 @@ The integration tests cover saved setup progress, resume, save failures, storefr
 ## Guest commerce update
 
 Speaker details, delivery estimates and guest Payflex checkout are implemented. See CHECKOUT_SETUP.md for the new product migration, shipping-zone configuration, Payflex environment variables, SADC quote flow, reservations and verification steps.
+
+## Store operations
+
+See [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md) for customer tracking, customer profiles and consent, stock movement history, revenue reports and campaign monitoring.

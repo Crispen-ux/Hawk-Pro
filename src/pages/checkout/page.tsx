@@ -28,7 +28,11 @@ import {
   SADC_COUNTRIES,
   type CheckoutInput,
 } from "../../../db/sales-validation";
-type Values = CheckoutInput["customer"] & { notes: string; consent: boolean };
+type Values = CheckoutInput["customer"] & {
+  notes: string;
+  consent: boolean;
+  marketingConsent: boolean;
+};
 export default function CheckoutPage() {
   const cart = useCart();
   const catalogue = useCatalogue();
@@ -65,6 +69,7 @@ export default function CheckoutPage() {
       billingCountry: "ZA",
       notes: "",
       consent: false,
+      marketingConsent: false,
     },
   });
   const billingSame = form.watch("billingSame");
@@ -105,7 +110,7 @@ export default function CheckoutPage() {
     }
     setBusy(true);
     try {
-      const { notes, consent, ...customer } = values;
+      const { notes, consent, marketingConsent, ...customer } = values;
       if (customer.billingSame)
         customer.billingCountry = delivery.destination.country;
       const payload = {
@@ -114,6 +119,7 @@ export default function CheckoutPage() {
         customer,
         notes,
         consent,
+        marketingConsent,
         intent: q.payable ? "pay" : "quote",
       };
       const key = await checkoutAttemptKey(payload);
@@ -503,6 +509,14 @@ export default function CheckoutPage() {
                   {...form.register("consent")}
                 />
                 I have checked my contact details, items and delivery selection.
+              </label>
+              <label className="flex gap-3 text-sm items-start">
+                <input
+                  type="checkbox"
+                  {...form.register("marketingConsent")}
+                  className="mt-1"
+                />
+                Email me HAWK news and offers (optional).
               </label>
               {form.formState.errors.consent && (
                 <p className="text-sm text-destructive" role="alert">

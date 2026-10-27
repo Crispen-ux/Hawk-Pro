@@ -1,3 +1,9 @@
+import OperationsInsights from "./operations-insights";
+import {
+  availableStock,
+  fulfillmentEvents,
+} from "../../../db/store-operations";
+import { useSearchParams } from "react-router-dom";
 import { orderItems } from "../../../db/checkout-model";
 import { request } from "@/lib/api";
 import { useState } from "react";
@@ -46,7 +52,14 @@ const fields: Record<CommerceKind, Field[]> = {
       label: "Payment status",
       options: ["unpaid", "paid", "refunded"],
     },
-    { key: "tracking", label: "Tracking number or URL" },
+    { key: "tracking", label: "Tracking reference" },
+    { key: "courier", label: "Courier name" },
+    { key: "trackingUrl", label: "Courier tracking URL (HTTPS)", type: "url" },
+    {
+      key: "estimatedDelivery",
+      label: "Estimated delivery date",
+      type: "date",
+    },
   ],
   customers: [
     { key: "name", label: "Full name", required: true },
@@ -60,6 +73,12 @@ const fields: Record<CommerceKind, Field[]> = {
     },
   ],
   inventory: [
+    {
+      key: "adjustmentReason",
+      label: "Reason for stock change",
+      required: true,
+    },
+    { key: "unitCostZar", label: "Unit cost (ZAR, optional)", type: "number" },
     { key: "productId", label: "Product", type: "product", required: true },
     {
       key: "quantity",
@@ -88,6 +107,13 @@ const fields: Record<CommerceKind, Field[]> = {
     },
     { key: "budget", label: "Budget (ZAR)", type: "number" },
     { key: "spend", label: "Spend (ZAR)", type: "number" },
+    { key: "impressions", label: "Impressions", type: "number" },
+    { key: "startsOn", label: "Start date", type: "date" },
+    { key: "endsOn", label: "End date", type: "date" },
+    { key: "landingUrl", label: "Campaign destination (HTTPS)", type: "url" },
+    { key: "utmSource", label: "UTM source" },
+    { key: "utmMedium", label: "UTM medium" },
+    { key: "utmCampaign", label: "UTM campaign" },
     { key: "clicks", label: "Clicks", type: "number" },
     { key: "conversions", label: "Conversions", type: "number" },
     { key: "revenue", label: "Attributed revenue (ZAR)", type: "number" },
@@ -120,7 +146,8 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
   const query = useCommerce();
   const products = useAdminProducts();
   const save = useSaveCommerce();
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(() => searchParams.get("search") ?? "");
   const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CommerceRecord>();
@@ -130,7 +157,9 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
     .filter((r) => r.kind === kind)
     .filter(
       (r) =>
-        JSON.stringify(r.data).toLowerCase().includes(search.toLowerCase()) ||
+        (r.id + JSON.stringify(r.data))
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
         (products.data ?? []).some(
           (p) =>
             p.id === r.data.productId &&
@@ -142,7 +171,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
         filter === "all" ||
         r.data.status === filter ||
         (filter === "low" &&
-          Number(r.data.quantity) <= Number(r.data.threshold)),
+          availableStock(r.data) <= Number(r.data.threshold)),
     );
   const [title, subtitle, action] = copy[kind];
   const productName = (id: unknown) =>
@@ -152,14 +181,19 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
     setEditing(r);
     setForm(
       r
-        ? { ...r.data }
+        ? {
+            ...r.data,
+            ...(kind === "inventory" ? { adjustmentReason: "" } : {}),
+          }
         : Object.fromEntries(
             fields[kind].map((f) => [
               f.key,
               f.type === "number"
-                ? f.key === "quantity"
-                  ? 1
-                  : 0
+                ? f.key === "unitCostZar"
+                  ? null
+                  : f.key === "quantity"
+                    ? 1
+                    : 0
                 : f.type === "checkbox"
                   ? false
                   : (f.options?.[0] ?? ""),
@@ -415,6 +449,38 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                               Retry confirmation email
                             </button>
                           )}
+                        {r.data.fulfillmentEmail === "failed" && (
+                          <button
+                            type="button"
+                            className="block text-xs text-primary underline mt-1"
+                            onClick={async () => {
+                              try {
+                                const result = await request<{
+                                  emailWarning?: string;
+                                }>("/api/payflex", {
+                                  method: "POST",
+                                  body: {
+                                    id: r.id,
+                                    notification: "fulfillment",
+                                  },
+                                  admin: true,
+                                });
+                                await query.refetch();
+                                setNotice(
+                                  result.emailWarning ?? "Status email sent.",
+                                );
+                              } catch (e) {
+                                setNotice(
+                                  e instanceof Error
+                                    ? e.message
+                                    : "Retry failed",
+                                );
+                              }
+                            }}
+                          >
+                            Retry status email
+                          </button>
+                        )}
                         {r.data.paymentProvider === "payflex" && (
                           <button
                             type="button"
@@ -464,7 +530,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                               : "secondary"
                           }
                         >
-                          {Number(r.data.quantity) === 0
+                          {availableStock(r.data) === 0
                             ? "Out of stock"
                             : Number(r.data.quantity) <=
                                 Number(r.data.threshold)
@@ -556,6 +622,9 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
           Revenue attribution is reported separately from order revenue.
         </p>
       )}
+      {(kind === "inventory" || kind === "campaigns") && (
+        <OperationsInsights kind={kind} rows={rows} productName={productName} />
+      )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="admin-theme max-h-[90vh] overflow-y-auto bg-card">
           <DialogHeader>
@@ -584,7 +653,9 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                     required
                     className="block w-full border p-2 mt-1"
                     value={String(form[f.key] ?? "")}
-                    disabled={!!editing && kind === "orders"}
+                    disabled={
+                      !!editing && (kind === "orders" || kind === "inventory")
+                    }
                     onChange={(e) =>
                       setForm({ ...form, [f.key]: e.target.value })
                     }
@@ -625,7 +696,18 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                     required={f.required}
                     type={f.type ?? "text"}
                     min={f.key === "quantity" && kind === "orders" ? 1 : 0}
-                    step={f.type === "number" ? 1 : undefined}
+                    step={
+                      f.type === "number"
+                        ? [
+                            "budget",
+                            "spend",
+                            "revenue",
+                            "unitCostZar",
+                          ].includes(f.key)
+                          ? "0.01"
+                          : 1
+                        : undefined
+                    }
                     value={String(form[f.key] ?? "")}
                     disabled={
                       !!editing && kind === "orders" && f.key === "quantity"
@@ -635,7 +717,9 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                         ...form,
                         [f.key]:
                           f.type === "number"
-                            ? Number(e.target.value)
+                            ? f.key === "unitCostZar" && e.target.value === ""
+                              ? null
+                              : Number(e.target.value)
                             : e.target.value,
                       })
                     }
@@ -733,6 +817,56 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                   </p>
                 </div>
               )}
+            {kind === "inventory" &&
+              editing &&
+              Array.isArray(editing.data.movements) && (
+                <section className="border-t pt-4">
+                  <h3 className="text-sm font-semibold mb-3">
+                    Recent stock movements
+                  </h3>
+                  <ol className="space-y-2 text-xs">
+                    {(
+                      editing.data.movements as {
+                        at: string;
+                        delta: number;
+                        reason: string;
+                        balance: number;
+                        type?: string;
+                      }[]
+                    )
+                      .slice(-10)
+                      .reverse()
+                      .map((m, i) => (
+                        <li key={i} className="border-b pb-2">
+                          {new Date(m.at).toLocaleString("en-ZA", {
+                            timeZone: "Africa/Johannesburg",
+                          })}{" "}
+                          · {m.delta > 0 ? "+" : ""}
+                          {m.delta} · {m.reason} · Balance {m.balance}
+                        </li>
+                      ))}
+                  </ol>
+                </section>
+              )}
+            {kind === "orders" && editing && (
+              <section className="border-t pt-4">
+                <h3 className="text-sm font-semibold mb-3">
+                  Fulfillment history
+                </h3>
+                <ol className="space-y-2 text-xs">
+                  {fulfillmentEvents(editing.data.fulfillmentEvents).map(
+                    (e, i) => (
+                      <li key={i} className="capitalize">
+                        {e.status} ·{" "}
+                        {new Date(e.at).toLocaleString("en-ZA", {
+                          timeZone: "Africa/Johannesburg",
+                        })}
+                      </li>
+                    ),
+                  )}
+                </ol>
+              </section>
+            )}
             {save.error && (
               <p role="alert" className="text-red-600 text-sm">
                 {save.error.message}

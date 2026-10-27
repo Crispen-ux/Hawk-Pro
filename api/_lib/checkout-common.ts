@@ -1,5 +1,10 @@
+import { fulfillmentEvents, safeTrackingUrl } from "../../db/store-operations";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { calculateDelivery, type DeliveryQuote } from "../../db/checkout-model";
+import {
+  calculateDelivery,
+  orderItems,
+  type DeliveryQuote,
+} from "../../db/checkout-model";
 import { listProducts } from "../../db/products";
 import { getSettings } from "../../db/settings";
 import type { EstimateInput, CheckoutInput } from "../../db/sales-validation";
@@ -86,6 +91,7 @@ export function checkoutHash(input: CheckoutInput) {
       intent: input.intent,
       notes: input.notes,
       consent: input.consent,
+      marketingConsent: input.marketingConsent,
     }),
   );
 }
@@ -94,13 +100,18 @@ export function receipt(record: { id: string; data: Record<string, unknown> }) {
   return {
     id: record.id,
     reference: "HAWK-" + record.id.slice(0, 8).toUpperCase(),
-    items: d.items,
-    subtotalCents: d.subtotalCents,
-    shippingCents: d.shippingCents,
-    totalCents: d.totalCents,
+    items: orderItems(d),
+    subtotalCents: d.subtotalCents ?? Math.round(Number(d.total ?? 0) * 100),
+    shippingCents: d.shippingCents ?? null,
+    totalCents: d.totalCents ?? Math.round(Number(d.total ?? 0) * 100),
     payment: d.payment,
-    paymentState: d.paymentState,
+    paymentState: d.paymentState ?? d.payment,
     status: d.status,
+    courier: d.courier ?? "",
+    tracking: d.tracking ?? "",
+    trackingUrl: safeTrackingUrl(d.trackingUrl),
+    estimatedDelivery: d.estimatedDelivery ?? "",
+    fulfillmentEvents: fulfillmentEvents(d.fulfillmentEvents),
     quoteRequired: d.quoteRequired,
     delivery: d.delivery,
     confirmationEmail: d.confirmationEmail ?? "pending",

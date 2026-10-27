@@ -12,7 +12,7 @@ export default function CustomerAccount() {
     queryFn: () =>
       request<{
         user: { name: string; email: string; role: string };
-        orders: CommerceRecord[];
+        orders: (CommerceRecord & { trackingPath?: string })[];
       }>("/api/account"),
     retry: false,
   });
@@ -79,6 +79,14 @@ export default function CustomerAccount() {
                         .map((i) => i.name + " × " + i.quantity)
                         .join(", ")}
                     </p>
+                    {o.trackingPath && (
+                      <Link
+                        to={o.trackingPath}
+                        className="inline-block text-sm text-primary underline mt-3"
+                      >
+                        Track order & delivery
+                      </Link>
+                    )}
                     {Boolean(o.data.tracking) && (
                       <p className="text-xs mt-2">
                         Tracking: {String(o.data.tracking)}
