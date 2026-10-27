@@ -60,6 +60,8 @@ See [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md) for customer tracking, customer p
 
 ## Server startup verification
 
-Server-side relative imports include their `.ts` extensions so Node.js 24 can load the API modules directly. `npm run build` runs `npm run test:server-imports` before type checking and the frontend build. Use Node.js 24 as specified by `package.json`. This check imports all API entry points without issuing requests or writing to the database.
+Server-side relative imports include their `.ts` extensions so Node.js 24 can load the API modules directly. `npm run build` runs `npm run test:server-imports` before type checking and the frontend build. Use Node.js 24 as specified by `package.json`. This check loads both source and emitted JavaScript entry points, then verifies the compiled account handler returns 401 when signed out. It makes no network requests and performs no database writes.
 
 A `FUNCTION_INVOCATION_FAILED` response means a function failed before it returned a normal application response. After updating the code, redeploy and verify `/api/account` returns 401 for a signed-out browser, then test password → emailed OTP → verified session. Database and email environment variables must be configured on that deployment. Failed OTP delivery returns a readable 503 response and removes the undelivered challenge so it does not leave a resend cooldown behind.
+
+The root TypeScript configuration is also used by the Vercel function builder. It explicitly emits ES modules and enables `rewriteRelativeImportExtensions` so packaged `.js` files import other `.js` files. Project references alone do not pass the API compiler options to that builder.
