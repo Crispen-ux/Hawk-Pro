@@ -1,3 +1,4 @@
+import DocumentPaymentSettings from "./document-payment-settings";
 import SalesFields from "./sales-fields";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -125,7 +126,8 @@ export default function AdminSettings() {
             </div>
           </form>
         </Form>
-        <aside className="space-y-4 lg:sticky lg:top-6">
+        <aside className="space-y-4">
+          <DocumentPaymentSettings />
           <StorePreview settings={preview} />
           <div className="flex gap-3 text-sm text-muted-foreground p-4 border">
             <CheckCircle2 className="size-5 shrink-0 text-primary" />

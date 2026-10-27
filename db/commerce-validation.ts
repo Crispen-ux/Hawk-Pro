@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { documentPaymentMethods } from "./document-payments-validation.ts";
 const dateField = z
   .string()
   .refine(
@@ -38,6 +39,8 @@ export const recordSchemas = {
     quantity: z.number().int().min(1).max(4000),
     status: z.enum(orderStatuses),
     payment: z.enum(["unpaid", "paid", "refunded"]),
+    documentPaymentMethod: z.enum(documentPaymentMethods).default("none"),
+    paymentReference: z.string().trim().max(160).default(""),
     tracking: z.string().max(200).default(""),
     courier: z.string().trim().max(100).default(""),
     trackingUrl: httpsField,

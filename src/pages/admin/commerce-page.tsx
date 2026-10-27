@@ -1,3 +1,4 @@
+import OrderDocument from "./order-document";
 import OperationsInsights from "./operations-insights";
 import {
   availableStock,
@@ -51,6 +52,15 @@ const fields: Record<CommerceKind, Field[]> = {
       key: "payment",
       label: "Payment status",
       options: ["unpaid", "paid", "refunded"],
+    },
+    {
+      key: "documentPaymentMethod",
+      label: "Payment options on quote / invoice",
+      options: ["none", "bank-transfer", "cash", "bank-transfer-or-cash"],
+    },
+    {
+      key: "paymentReference",
+      label: "Bank / cash payment reference (optional)",
     },
     { key: "tracking", label: "Tracking reference" },
     { key: "courier", label: "Courier name" },
@@ -570,6 +580,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                     </>
                   )}
                   <td>
+                    {kind === "orders" && <OrderDocument order={r} />}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -672,7 +683,7 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                     disabled={
                       kind === "orders" &&
                       editing?.data.paymentProvider === "payflex" &&
-                      f.key === "payment"
+                      ["payment", "documentPaymentMethod"].includes(f.key)
                     }
                     className="block w-full border p-2 mt-1"
                     value={String(form[f.key] ?? "")}
@@ -681,7 +692,16 @@ export default function CommercePage({ kind }: { kind: CommerceKind }) {
                     }
                   >
                     {f.options.map((o) => (
-                      <option key={o}>{o}</option>
+                      <option key={o} value={o}>
+                        {f.key === "documentPaymentMethod"
+                          ? ({
+                              none: "No offline payment instructions",
+                              "bank-transfer": "Bank transfer",
+                              cash: "Cash",
+                              "bank-transfer-or-cash": "Bank transfer or cash",
+                            }[o] ?? o)
+                          : o}
+                      </option>
                     ))}
                   </select>
                 ) : (
