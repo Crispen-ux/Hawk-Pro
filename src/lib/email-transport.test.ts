@@ -51,6 +51,21 @@ describe("transactional email transports", () => {
         html: expect.stringContaining("HAWK"),
       }),
     );
+    const sent = smtp.sendMail.mock.calls[0][0];
+    expect(sent.html).toContain(
+      'src="cid:hawk-brand-logo@hawkprofessional.vercel.app"',
+    );
+    expect(sent.attachments).toEqual([
+      expect.objectContaining({
+        cid: "hawk-brand-logo@hawkprofessional.vercel.app",
+        content: expect.any(Buffer),
+        contentType: "image/png",
+        contentDisposition: "inline",
+      }),
+    ]);
+    expect(sent.attachments[0].content.subarray(0, 8)).toEqual(
+      Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    );
     expect(smtp.close).toHaveBeenCalled();
   });
   it("fails rejected recipients and closes the SMTP connection without logging the password", async () => {

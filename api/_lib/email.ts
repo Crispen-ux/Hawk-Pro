@@ -1,3 +1,4 @@
+import { hawkEmailLogoAttachment } from "./email-logo.ts";
 import { createHash } from "node:crypto";
 import { smtpTransport } from "./smtp.ts";
 import { emailTemplate, type EmailDesign } from "./email-template.ts";
@@ -27,7 +28,8 @@ export async function sendEmail(
           (design.action
             ? "\n" + design.action.label + ": " + design.action.url
             : ""),
-        html: emailTemplate(title, message, design),
+        html: emailTemplate(title, message, design, true),
+        attachments: [hawkEmailLogoAttachment()],
         ...(process.env.EMAIL_REPLY_TO
           ? { replyTo: process.env.EMAIL_REPLY_TO }
           : {}),

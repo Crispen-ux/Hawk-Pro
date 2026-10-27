@@ -1,3 +1,4 @@
+import { HAWK_EMAIL_LOGO_CID } from "./email-logo.ts";
 export type EmailDesign = {
   eyebrow?: string;
   preheader?: string;
@@ -44,10 +45,13 @@ export function emailTemplate(
   title: string,
   message: string,
   design: EmailDesign = {},
+  embeddedLogo = false,
 ) {
   const e = escapeEmailHtml,
     site = emailSiteUrl(),
-    logo = https(process.env.EMAIL_LOGO_URL) || site + "/brand/hawk-white.png";
+    logo = embeddedLogo
+      ? "cid:" + HAWK_EMAIL_LOGO_CID
+      : https(process.env.EMAIL_LOGO_URL) || site + "/brand/hawk-white.png";
   const support = (
     process.env.EMAIL_REPLY_TO ||
     process.env.SMTP_USER ||
