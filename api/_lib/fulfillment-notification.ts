@@ -28,9 +28,16 @@ export async function notifyFulfillment(id: string) {
   try {
     const link = siteUrl() + "/orders/" + id + "/" + secureToken(id, "guest");
     const tracking = safeTrackingUrl(d.trackingUrl);
+    const titles: Record<string, string> = {
+      pending: "We received your HAWK order",
+      processing: "We are preparing your order",
+      shipped: "Your order is on its way",
+      delivered: "Your order has been delivered",
+      cancelled: "Your order has been cancelled",
+    };
     await sendEmail(
       String(d.email),
-      "Your HAWK order: " + String(d.status),
+      titles[String(d.status)] || "An update on your HAWK order",
       "Hi " +
         d.name +
         ",\nReference: HAWK-" +
@@ -52,6 +59,39 @@ export async function notifyFulfillment(id: string) {
         "\nView your order: " +
         link,
       id + "-fulfillment-" + rev,
+      {
+        eyebrow: "Order update",
+        preheader:
+          titles[String(d.status)] || "The latest update on your HAWK order.",
+        intro:
+          "Hi " +
+          String(d.name) +
+          ",\nHere is the latest update on your HAWK order. You can view the progress and delivery details using the link below.",
+        facts: [
+          { label: "Reference", value: "HAWK-" + id.slice(0, 8).toUpperCase() },
+          {
+            label: "Status",
+            value: String(d.status).replace(/^./, (c) => c.toUpperCase()),
+          },
+          ...(d.courier
+            ? [{ label: "Courier", value: String(d.courier) }]
+            : []),
+          ...(d.tracking
+            ? [{ label: "Tracking reference", value: String(d.tracking) }]
+            : []),
+          ...(d.estimatedDelivery
+            ? [
+                {
+                  label: "Estimated delivery",
+                  value:
+                    String(d.estimatedDelivery) +
+                    " (subject to courier updates)",
+                },
+              ]
+            : []),
+        ],
+        action: { label: "Track your order", url: link },
+      },
     );
   } catch {
     state = "failed";

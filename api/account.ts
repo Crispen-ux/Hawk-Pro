@@ -13,7 +13,7 @@ import { accounts, challenges, commerce } from "../db/schema.ts";
 import { parseBody, sendJson, withErrors } from "./_lib/http.ts";
 import { readSession, signSession } from "./_lib/session.ts";
 import { allowAuth } from "./_lib/rate-limit.ts";
-import { sendEmail } from "./_lib/email.ts";
+import { sendEmail, emailSiteUrl } from "./_lib/email.ts";
 const digest = (s: string) => {
   const secret = process.env.SESSION_SECRET;
   if (!secret || secret.length < 32)
@@ -215,8 +215,25 @@ export default withErrors(async (req, res) => {
       try {
         await sendEmail(
           email,
-          "Your Hawk verification code",
-          `Your code is ${code}.\nIt expires in 10 minutes. Never share this code.\nIf you did not request this, ignore this email.`,
+          purpose === "reset"
+            ? "Reset your HAWK password"
+            : purpose === "verify"
+              ? "Verify your HAWK account"
+              : "Your HAWK sign-in code",
+          "Use this code to " +
+            (purpose === "reset"
+              ? "reset your password."
+              : purpose === "verify"
+                ? "verify your email address."
+                : "finish signing in to your account.") +
+            "\nIf you did not request this, you can safely ignore this email.",
+          undefined,
+          {
+            eyebrow: "Account security",
+            preheader:
+              "Your secure HAWK verification code expires in 10 minutes.",
+            code,
+          },
         );
       } catch {
         await db
@@ -305,8 +322,17 @@ export default withErrors(async (req, res) => {
     try {
       await sendEmail(
         email,
-        "Welcome to Hawk",
-        `Hi ${account.name},\nWelcome to Hawk Pro Audio. Your account is verified and ready. Explore our catalogue for your next sound system.`,
+        "Welcome to HAWK",
+        `Hi ${account.name},\nWelcome to HAWK Pro Audio. Your email is verified and your account is ready. Explore our speakers, subwoofers and professional audio equipment, or visit your account to view your orders.`,
+        undefined,
+        {
+          eyebrow: "Welcome to the HAWK community",
+          preheader: "Your HAWK account is ready. Find your next sound.",
+          action: {
+            label: "Explore the collection",
+            url: emailSiteUrl() + "/shop",
+          },
+        },
       );
     } catch {
       console.error("Welcome email delivery failed");

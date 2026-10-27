@@ -56,7 +56,8 @@ describe("session integrity", () => {
       "<img src=x onerror=alert(1)>",
     );
     expect(html).not.toContain("<script>");
-    expect(html).not.toContain("<img");
+    expect(html).not.toContain("<img src=x");
+    expect(html).not.toContain("onerror=alert(1)>");
     expect(html).toContain("&lt;img");
   });
 });

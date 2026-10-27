@@ -66,11 +66,15 @@ describe("fulfillment emails", () => {
     ).toBe(true);
     expect(sendEmail).toHaveBeenCalledWith(
       "buyer@hawk.example",
-      "Your HAWK order: shipped",
+      "Your order is on its way",
       expect.stringContaining(
         "https://hawk.example/orders/313b85e0-3642-45f8-8385-bf60d442219a/",
       ),
       "313b85e0-3642-45f8-8385-bf60d442219a-fulfillment-2",
+      expect.objectContaining({
+        eyebrow: "Order update",
+        action: expect.objectContaining({ label: "Track your order" }),
+      }),
     );
     expect(state.writes).toHaveLength(2);
   });
