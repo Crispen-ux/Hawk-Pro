@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "challenge_email_purpose_unique" ON "auth_challenges" USING btree ("email","purpose");--> statement-breakpoint
+CREATE UNIQUE INDEX "inventory_product_unique" ON "commerce" USING btree (("data"->>'productId')) WHERE "commerce"."kind" = 'inventory';
