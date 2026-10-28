@@ -194,6 +194,7 @@ export default function ImageEditor({
         Replace image (JPEG, PNG or WebP)
         <input
           type="file"
+          className="image-file-input block w-full rounded-md border border-input bg-background p-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
           accept="image/jpeg,image/png,image/webp"
           disabled={busy}
           onChange={(e) => {
