@@ -1,4 +1,67 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
+  "routes": [
+    {
+      "src": "^/(?:admin|account|checkout|orders|auth)(?:/.*)?$",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      },
+      "continue": true
+    },
+    {
+      "src": "^/sitemap\\.xml$",
+      "dest": "/api/products?format=sitemap"
+    },
+    {
+      "src": "^/shop/?$",
+      "dest": "/seo/shop.html"
+    },
+    {
+      "src": "^/rentals/?$",
+      "dest": "/seo/rentals.html"
+    },
+    {
+      "src": "^/repairs/?$",
+      "dest": "/seo/repairs.html"
+    },
+    {
+      "src": "^/about/?$",
+      "dest": "/seo/about.html"
+    },
+    {
+      "src": "^/tools/?$",
+      "dest": "/seo/tools.html"
+    },
+    {
+      "src": "^/resources/?$",
+      "dest": "/seo/resources.html"
+    },
+    {
+      "src": "^/resources/how-to-choose-pa-speakers/?$",
+      "dest": "/seo/resources/how-to-choose-pa-speakers.html"
+    },
+    {
+      "src": "^/resources/what-to-know-before-renting-pa-equipment/?$",
+      "dest": "/seo/resources/what-to-know-before-renting-pa-equipment.html"
+    },
+    {
+      "src": "^/resources/common-speaker-faults-and-what-they-mean/?$",
+      "dest": "/seo/resources/common-speaker-faults-and-what-they-mean.html"
+    },
+    {
+      "src": "^/resources/active-vs-passive-speakers/?$",
+      "dest": "/seo/resources/active-vs-passive-speakers.html"
+    },
+    {
+      "src": "^/resources/subwoofer-placement-basics/?$",
+      "dest": "/seo/resources/subwoofer-placement-basics.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "^/(?!api/).*",
+      "dest": "/index.html"
+    }
+  ]
 }

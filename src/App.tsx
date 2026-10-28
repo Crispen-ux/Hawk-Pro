@@ -1,3 +1,4 @@
+import SiteSeo from "./components/site-seo";
 const ContentPagePreview = lazy(() => import("./pages/admin/content/preview"));
 const WebsiteContentEditor = lazy(() => import("./pages/admin/content/page"));
 import { lazy, Suspense } from "react";
@@ -39,6 +40,7 @@ export default function App() {
   return (
     <DefaultProviders>
       <BrowserRouter>
+        <SiteSeo />
         <Suspense
           fallback={<div className="p-12 text-center">Loading workspace…</div>}
         >

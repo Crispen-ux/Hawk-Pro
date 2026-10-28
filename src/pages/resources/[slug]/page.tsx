@@ -2,29 +2,11 @@ import { Link, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button.tsx";
 import { getArticle } from "@/data/resources.ts";
-import { useSeo } from "@/hooks/use-seo.ts";
 import CtaPanel from "../_components/cta-panel.tsx";
 
 export default function ArticlePage() {
   const { slug = "" } = useParams();
   const article = getArticle(slug);
-
-  useSeo({
-    title: article
-      ? `${article.title} | HAWK Audio`
-      : "Article not found | HAWK Audio",
-    description: article?.description ?? "This article could not be found.",
-    jsonLd: article
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Article",
-          headline: article.title,
-          description: article.description,
-          datePublished: article.publishedAt,
-          author: { "@type": "Organization", name: "HAWK" },
-        }
-      : undefined,
-  });
 
   if (!article) {
     return (

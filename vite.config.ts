@@ -1,3 +1,4 @@
+import { seoPlugin } from "./build/seo-plugin.ts";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
@@ -77,7 +78,16 @@ function apiDevPlugin(env: Record<string, string>): Plugin {
     name: "hawk-api-dev",
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        const url = req.url ?? "";
+        let url = req.url ?? "";
+        if (url.split("?")[0] === "/robots.txt") {
+          res.setHeader("Content-Type", "text/plain; charset=utf-8");
+          res.end("User-agent: *\nDisallow: /\n");
+          return;
+        }
+        if (url.split("?")[0] === "/sitemap.xml") {
+          url = "/api/products?format=sitemap";
+          req.url = url;
+        }
         if (!url.startsWith("/api/")) return next();
 
         const [pathname, search = ""] = url.split("?");
@@ -136,7 +146,13 @@ export default defineConfig(({ mode }) => {
         overlay: false,
       },
     },
-    plugins: [react(), tailwindcss(), hercules(), apiDevPlugin(env)],
+    plugins: [
+      react(),
+      tailwindcss(),
+      hercules(),
+      apiDevPlugin(env),
+      seoPlugin(env),
+    ],
     resolve: {
       alias: {
         "@/convex": path.resolve(import.meta.dirname, "./convex"),

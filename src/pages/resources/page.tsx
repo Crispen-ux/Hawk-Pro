@@ -1,15 +1,9 @@
 import { Link } from "react-router-dom";
 import { ArrowRightIcon } from "lucide-react";
 import { ARTICLES } from "@/data/resources.ts";
-import { useSeo } from "@/hooks/use-seo.ts";
 import CtaPanel from "./_components/cta-panel.tsx";
 
 export default function ResourcesPage() {
-  useSeo({
-    title: "Audio guides and resources | HAWK Audio",
-    description:
-      "Practical guides on choosing PA speakers, renting sound equipment, speaker faults and subwoofer setup, plus free audio calculators.",
-  });
   const articles = [...ARTICLES].sort((a, b) =>
     b.publishedAt.localeCompare(a.publishedAt),
   );
