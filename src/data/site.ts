@@ -5,9 +5,6 @@ export const LOGO_URL = "/brand/hawk-white.png";
 
 export const NAV_LINKS = [
   { label: "Shop", to: "/shop" },
-  { label: "Speakers", to: "/shop?category=speakers" },
-  { label: "Subwoofers", to: "/shop?category=subwoofers" },
-  { label: "Accessories", to: "/shop?category=accessories" },
   { label: "Rentals", to: "/rentals" },
   { label: "Repairs", to: "/repairs" },
   { label: "Tools", to: "/tools" },
