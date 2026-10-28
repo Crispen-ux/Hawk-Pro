@@ -1,4 +1,10 @@
-import { useContext, type CSSProperties } from "react";
+import {
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { ContentPreview, useWebsiteContent } from "@/hooks/use-website-content";
 import type {
   Slot,
@@ -15,7 +21,35 @@ export function FramedImage({
   className?: string;
   priority?: boolean;
 }) {
+  const host = useRef<HTMLDivElement>(null);
+  const picture = useRef<HTMLImageElement>(null);
+  const [cover, setCover] = useState({ width: 100, height: 100 });
+  const measure = () => {
+    const box = host.current;
+    const img = picture.current;
+    if (!box || !img?.naturalWidth || !box.clientWidth || !box.clientHeight)
+      return;
+    const scale = Math.max(
+      box.clientWidth / img.naturalWidth,
+      box.clientHeight / img.naturalHeight,
+    );
+    const width = ((img.naturalWidth * scale) / box.clientWidth) * 100;
+    const height = ((img.naturalHeight * scale) / box.clientHeight) * 100;
+    setCover((old) =>
+      old.width === width && old.height === height ? old : { width, height },
+    );
+  };
+  useEffect(() => {
+    if (!host.current) return;
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(host.current);
+    return () => observer.disconnect();
+  }, [image.src]);
   const style = {
+    "--cover-width": cover.width + "%",
+    "--cover-height": cover.height + "%",
     "--frame-x": image.desktop.x + "%",
     "--frame-y": image.desktop.y + "%",
     "--frame-z": image.desktop.zoom,
@@ -26,22 +60,39 @@ export function FramedImage({
   const f =
     mobile === undefined ? undefined : mobile ? image.mobile : image.desktop;
   return (
-    <div className={"content-image overflow-hidden " + className} style={style}>
-      <img
-        src={image.src}
-        alt={image.alt}
-        loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : undefined}
-        style={
-          f
-            ? {
-                objectPosition: f.x + "% " + f.y + "%",
-                transformOrigin: f.x + "% " + f.y + "%",
-                transform: "scale(" + f.zoom + ")",
-              }
-            : undefined
-        }
-      />
+    <div
+      ref={host}
+      className={"content-image overflow-hidden bg-muted " + className}
+      style={style}
+    >
+      <div className="relative size-full">
+        <img
+          ref={picture}
+          onLoad={measure}
+          draggable={false}
+          src={image.src}
+          alt={image.alt}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
+          style={
+            f
+              ? {
+                  left: f.x + "%",
+                  top: f.y + "%",
+                  transformOrigin: f.x + "% " + f.y + "%",
+                  transform:
+                    "translate(-" +
+                    f.x +
+                    "%, -" +
+                    f.y +
+                    "%) scale(" +
+                    f.zoom +
+                    ")",
+                }
+              : undefined
+          }
+        />
+      </div>
     </div>
   );
 }

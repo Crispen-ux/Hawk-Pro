@@ -106,24 +106,36 @@ export default function ImageEditor({
         }}
         onPointerMove={(e) => {
           if (!drag.current) return;
-          const b = e.currentTarget.getBoundingClientRect();
+          const box = e.currentTarget.getBoundingClientRect();
+          const picture = e.currentTarget
+            .querySelector("img")
+            ?.getBoundingClientRect();
+          if (!picture) return;
+          const gapX = box.width - picture.width;
+          const gapY = box.height - picture.height;
           update({
-            x: Math.max(
-              0,
-              Math.min(
-                100,
-                drag.current.fx -
-                  ((e.clientX - drag.current.x) / b.width) * 100,
-              ),
-            ),
-            y: Math.max(
-              0,
-              Math.min(
-                100,
-                drag.current.fy -
-                  ((e.clientY - drag.current.y) / b.height) * 100,
-              ),
-            ),
+            x:
+              Math.abs(gapX) < 1
+                ? drag.current.fx
+                : Math.max(
+                    0,
+                    Math.min(
+                      100,
+                      drag.current.fx +
+                        ((e.clientX - drag.current.x) / gapX) * 100,
+                    ),
+                  ),
+            y:
+              Math.abs(gapY) < 1
+                ? drag.current.fy
+                : Math.max(
+                    0,
+                    Math.min(
+                      100,
+                      drag.current.fy +
+                        ((e.clientY - drag.current.y) / gapY) * 100,
+                    ),
+                  ),
           });
         }}
         onPointerUp={() => (drag.current = null)}
@@ -148,7 +160,7 @@ export default function ImageEditor({
       </p>
       {(
         [
-          ["zoom", "Zoom", 1, 3, 0.01],
+          ["zoom", "Zoom", 0.1, 3, 0.01],
           ["x", "Horizontal position", 0, 100, 1],
           ["y", "Vertical position", 0, 100, 1],
         ] as const
@@ -168,6 +180,10 @@ export default function ImageEditor({
           />
         </label>
       ))}
+      <p className="text-sm text-muted-foreground">
+        100% fills the frame. Zoom out to 10% to show more of the picture; the
+        frame background shows around smaller images.
+      </p>
       <Button
         variant="outline"
         onClick={() => onChange({ ...image, [mode]: { ...DEFAULT_FRAME } })}

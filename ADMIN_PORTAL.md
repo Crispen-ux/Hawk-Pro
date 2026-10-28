@@ -72,7 +72,7 @@ The product editor accepts multiple image files at once through the file picker 
 
 ## Website content and promotions
 
-Open Store settings → Manage website content, or /admin/settings/content. Eleven fixed image positions cover Home (eight), Rentals hero, Repairs hero and About main image. Replace an image, drag to reposition, adjust zoom (100–300%), and save independent desktop/mobile crops. Cropping retains the full processed image. Images are resized to a maximum 2400 px and compressed to WebP before the existing authenticated upload (4 MB maximum); choose an original up to 25 MB. The draft media library retains up to 100 reusable uploaded images.
+Open Store settings → Manage website content, or /admin/settings/content. Eleven fixed image positions cover Home (eight), Rentals hero, Repairs hero and About main image. Replace an image, drag to reposition, adjust zoom (10–300%; below 100% reveals more of the original image and may expose the frame background), and save independent desktop/mobile crops. Cropping retains the full processed image. Images are resized to a maximum 2400 px and compressed to WebP before the existing authenticated upload (4 MB maximum); choose an original up to 25 MB. The draft media library retains up to 100 reusable uploaded images.
 
 The homepage hero heading, description and primary button are editable. Hero overlay controls adjust readability. CNC footage uses a direct HTTPS MP4/WebM URL, optional uploaded poster, heading, description and visibility switch; the same player appears on Home and About, with controls and no autoplay. Large video files must be hosted separately; this release does not upload video files.
 

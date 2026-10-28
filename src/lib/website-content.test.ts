@@ -63,3 +63,16 @@ describe("promotion schedule", () => {
     expect(contentSchema.safeParse(c).success).toBe(false);
   });
 });
+
+it("allows zooming out but rejects zero and negative scales", () => {
+  for (const zoom of [0.1, 0.5, 1, 3]) {
+    const c = structuredClone(DEFAULT_CONTENT);
+    c.images["home-hero"].desktop.zoom = zoom;
+    expect(contentSchema.safeParse(c).success).toBe(true);
+  }
+  for (const zoom of [0, -1, 0.09]) {
+    const c = structuredClone(DEFAULT_CONTENT);
+    c.images["home-hero"].desktop.zoom = zoom;
+    expect(contentSchema.safeParse(c).success).toBe(false);
+  }
+});

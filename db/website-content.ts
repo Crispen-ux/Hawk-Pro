@@ -20,7 +20,7 @@ const destination = z
 export const frameSchema = z.object({
   x: z.number().min(0).max(100),
   y: z.number().min(0).max(100),
-  zoom: z.number().min(1).max(3),
+  zoom: z.number().min(0.1).max(3),
 });
 export const imageSchema = z.object({
   src: mediaUrl.refine((v) => v.length > 0, "Choose an image"),

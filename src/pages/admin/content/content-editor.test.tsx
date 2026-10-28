@@ -34,7 +34,7 @@ it("keeps mobile framing separate and saves a private draft before publishing", 
   await screen.findByText("Make it your own.");
   fireEvent.click(screen.getByRole("button", { name: "Mobile crop" }));
   fireEvent.change(screen.getByRole("slider", { name: /Zoom/ }), {
-    target: { value: "1.75" },
+    target: { value: "0.5" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
   await waitFor(() =>
@@ -47,7 +47,7 @@ it("keeps mobile framing separate and saves a private draft before publishing", 
           content: expect.objectContaining({
             images: expect.objectContaining({
               "home-hero": expect.objectContaining({
-                mobile: { x: 50, y: 50, zoom: 1.75 },
+                mobile: { x: 50, y: 50, zoom: 0.5 },
                 desktop: { x: 50, y: 50, zoom: 1 },
               }),
             }),
