@@ -2,7 +2,7 @@ import {
   duplicateProduct,
   generateProductDescription,
 } from "@/lib/product-authoring";
-import ProductImageScale from "../product-image-scale";
+import ProductImageFraming from "../product-image-framing";
 import ProductImageUploader from "../product-image-uploader";
 import ProductDetailsFields from "../product-details-fields";
 import {
@@ -207,6 +207,12 @@ export default function AdminProductEditor() {
       const input: ProductInput = {
         ...values,
         priceZar: Number(values.priceZar),
+        details: {
+          ...values.details,
+          imageFrames: values.details.imageFrames?.filter((item) =>
+            values.images.includes(item.src),
+          ),
+        },
       };
       if (isNew) await createProduct(input);
       else await updateProduct(id, input);
@@ -562,13 +568,12 @@ export default function AdminProductEditor() {
                   <ImagePlusIcon /> Add
                 </Button>
               </div>
-              <ProductImageScale
-                src={images[0]}
-                name={name || ""}
-                value={details.imageDisplayScale ?? 100}
-                disabled={saving}
+              <ProductImageFraming
+                images={images}
+                details={details}
+                disabled={saving || uploading}
                 onChange={(value) =>
-                  form.setValue("details.imageDisplayScale", value, {
+                  form.setValue("details", value, {
                     shouldDirty: true,
                     shouldValidate: true,
                   })

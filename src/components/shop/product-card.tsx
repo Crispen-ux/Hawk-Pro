@@ -1,3 +1,4 @@
+import { FramedImage } from "@/components/content-image";
 import ProductCardImage from "./product-card-image";
 import { Link } from "react-router-dom";
 import { ShoppingCartIcon } from "lucide-react";
@@ -10,6 +11,9 @@ import { formatZar } from "@/lib/format.ts";
 export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const href = `/shop/${product.slug}`;
+  const framing = product.details?.imageFrames?.find(
+    (i) => i.src === product.images[0],
+  )?.framing;
 
   return (
     <article className="group flex flex-col border bg-card">
@@ -18,11 +22,24 @@ export default function ProductCard({ product }: { product: Product }) {
         className="relative block aspect-[4/3] overflow-hidden bg-muted"
         aria-label={`View ${product.name}`}
       >
-        <ProductCardImage
-          src={product.images[0]}
-          alt={product.name}
-          scale={product.details?.imageDisplayScale ?? 100}
-        />
+        {framing ? (
+          <FramedImage
+            image={{
+              src: product.images[0],
+              alt: product.name,
+              overlay: 0,
+              ...framing,
+            }}
+            fit="contain"
+            className="absolute inset-0 size-full"
+          />
+        ) : (
+          <ProductCardImage
+            src={product.images[0]}
+            alt={product.name}
+            scale={product.details?.imageDisplayScale ?? 100}
+          />
+        )}
         <span className="absolute left-3 top-3 bg-background/90 px-2 py-1 text-[11px] font-semibold uppercase tracking-wider">
           {AVAILABILITY_LABEL[product.availability]}
         </span>

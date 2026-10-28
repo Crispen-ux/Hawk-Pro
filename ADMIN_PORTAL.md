@@ -83,3 +83,5 @@ Save draft keeps edits private. Preview page opens the actual page layout in a d
 Local source changes only: no GitHub push, deployment, or production content/database writes were performed for this feature.
 
 Promotional banner previews now share the storefront renderer and include desktop/mobile widths. Full banner images fit without cropping; announcement strips remain text-only. Each promotion can customize text size, alignment, background/text colours, and solid or outlined button colours. Existing saved promotions remain compatible.
+
+Promotional image banners and product gallery images support zoom (10–300%), drag positioning, horizontal/vertical sliders, reset, and independent desktop/mobile framing. Banner framing saves with the website draft and uses the same renderer in preview and storefront. Product framing saves with product details per image URL, applies to the first image on catalogue/featured cards and the selected image on the product page. The enlarge dialog retains the original full image. Existing products retain their legacy card scale until framing is edited; no database migration is needed.

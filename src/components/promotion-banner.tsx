@@ -1,3 +1,5 @@
+import { FramedImage } from "./content-image";
+import { defaultImageFraming } from "../../db/image-framing";
 import { Link } from "react-router-dom";
 import {
   defaultPromotionStyle,
@@ -7,9 +9,11 @@ export type Promotion = WebsiteContent["promotions"][number];
 export default function PromotionBanner({
   promotion: p,
   preview = false,
+  mobile,
 }: {
   promotion: Promotion;
   preview?: boolean;
+  mobile?: boolean;
 }) {
   const strip = p.placement === "strip";
   const style = p.style ?? defaultPromotionStyle(strip);
@@ -66,13 +70,17 @@ export default function PromotionBanner({
         }
       >
         {!strip && p.image ? (
-          <div className="flex min-h-56 items-center justify-center bg-muted p-4 @2xl:min-h-72">
-            <img
-              src={p.image}
-              alt=""
-              className="max-h-80 w-full object-contain"
-            />
-          </div>
+          <FramedImage
+            image={{
+              src: p.image,
+              alt: "",
+              overlay: 0,
+              ...(p.imageFraming ?? defaultImageFraming()),
+            }}
+            fit="contain"
+            mobile={mobile}
+            className="aspect-video w-full self-center"
+          />
         ) : null}
         <div
           style={{ textAlign: style.alignment }}

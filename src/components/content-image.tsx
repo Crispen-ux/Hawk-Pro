@@ -19,11 +19,13 @@ export function FramedImage({
   mobile,
   className = "",
   priority = false,
+  fit = "cover",
 }: {
   image: ImageValue;
   mobile?: boolean;
   className?: string;
   priority?: boolean;
+  fit?: "cover" | "contain";
 }) {
   const host = useRef<HTMLDivElement>(null);
   const picture = useRef<HTMLImageElement>(null);
@@ -33,7 +35,7 @@ export function FramedImage({
     const img = picture.current;
     if (!box || !img?.naturalWidth || !box.clientWidth || !box.clientHeight)
       return;
-    const scale = Math.max(
+    const scale = (fit === "contain" ? Math.min : Math.max)(
       box.clientWidth / img.naturalWidth,
       box.clientHeight / img.naturalHeight,
     );
@@ -50,7 +52,7 @@ export function FramedImage({
     const observer = new ResizeObserver(measure);
     observer.observe(host.current);
     return () => observer.disconnect();
-  }, [image.src]);
+  }, [image.src, fit]);
   const style = {
     "--cover-width": cover.width + "%",
     "--cover-height": cover.height + "%",

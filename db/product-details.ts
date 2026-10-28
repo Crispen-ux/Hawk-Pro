@@ -1,7 +1,17 @@
+import { imageFramingSchema } from "./image-framing.ts";
 import { z } from "zod";
 const measure = z.number().positive().max(10000).nullable().default(null);
 export const productDetailsSchema = z
   .object({
+    imageFrames: z
+      .array(
+        z.object({
+          src: z.string().url().max(2048),
+          framing: imageFramingSchema,
+        }),
+      )
+      .max(8)
+      .optional(),
     imageDisplayScale: z.number().int().min(25).max(100).default(100),
     sku: z.string().trim().max(80).default(""),
     soldAs: z

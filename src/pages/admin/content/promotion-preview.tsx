@@ -41,14 +41,14 @@ export default function PromotionPreview({
         className="mx-auto overflow-hidden rounded-lg border bg-background"
         style={{ maxWidth: mobile ? 390 : undefined }}
       >
-        <PromotionBanner promotion={promotion} preview />
+        <PromotionBanner promotion={promotion} mobile={mobile} preview />
       </div>
       <p className="text-xs text-muted-foreground">
         Preview shows your current edits, including disabled or scheduled
         banners.{" "}
         {promotion.placement === "strip"
           ? "Announcement strips show text and a button; choose a homepage or shop banner to display an image."
-          : "The full image is fitted without cropping."}
+          : "Image zoom and positioning match your saved desktop or mobile framing."}
       </p>
     </section>
   );

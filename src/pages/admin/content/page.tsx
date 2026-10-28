@@ -1,3 +1,5 @@
+import ImageFramingEditor from "@/components/image-framing-editor";
+import { defaultImageFraming } from "../../../../db/image-framing";
 import PromotionStyleFields from "./promotion-style-fields";
 import PromotionPreview from "./promotion-preview";
 import { useEffect, useState } from "react";
@@ -556,6 +558,17 @@ export default function WebsiteContentEditor() {
                       ),
                     )}
                   </div>
+                  {p.image && p.placement !== "strip" ? (
+                    <ImageFramingEditor
+                      key={p.id + p.image}
+                      src={p.image}
+                      value={p.imageFraming ?? defaultImageFraming()}
+                      onChange={(imageFraming) => update({ imageFraming })}
+                      disabled={busy}
+                      aspect="16/9"
+                      label="Banner image zoom and position"
+                    />
+                  ) : null}
                   <PromotionStyleFields
                     promotion={p}
                     onChange={(style) => update({ style })}

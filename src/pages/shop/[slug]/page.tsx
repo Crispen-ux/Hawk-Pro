@@ -1,3 +1,4 @@
+import { FramedImage } from "@/components/content-image";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
@@ -82,6 +83,9 @@ export default function ProductPage() {
   const details = normaliseProductDetails(product.details),
     gallery = product.images,
     currentImage = gallery[Math.min(active, Math.max(0, gallery.length - 1))];
+  const framing = details.imageFrames?.find(
+    (i) => i.src === currentImage,
+  )?.framing;
   const related = getRelatedProducts(products, product);
   const ready =
     product.availability === "in-stock" &&
@@ -156,15 +160,29 @@ export default function ProductPage() {
           >
             {currentImage ? (
               <>
-                <img
-                  src={currentImage}
-                  alt={
-                    product.name +
-                    ", view " +
-                    (Math.min(active, gallery.length - 1) + 1)
-                  }
-                  className="size-full object-contain p-4"
-                />
+                {framing ? (
+                  <FramedImage
+                    key={currentImage}
+                    image={{
+                      src: currentImage,
+                      alt: product.name,
+                      overlay: 0,
+                      ...framing,
+                    }}
+                    fit="contain"
+                    className="absolute inset-0 size-full"
+                  />
+                ) : (
+                  <img
+                    src={currentImage}
+                    alt={
+                      product.name +
+                      ", view " +
+                      (Math.min(active, gallery.length - 1) + 1)
+                    }
+                    className="size-full object-contain p-4"
+                  />
+                )}
                 <span className="absolute bottom-4 right-4 bg-background p-2 border">
                   <ZoomIn size={18} />
                 </span>

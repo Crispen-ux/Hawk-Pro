@@ -1,3 +1,5 @@
+import { frameSchema, imageFramingSchema } from "./image-framing.ts";
+export { frameSchema } from "./image-framing.ts";
 import { z } from "zod";
 import { IMAGES, unsplash } from "./website-assets.ts";
 const mediaUrl = z
@@ -17,11 +19,6 @@ const destination = z
     (v) => v.startsWith("/") && !v.startsWith("//") && !v.includes("\\"),
     "Use a storefront path starting with /",
   );
-export const frameSchema = z.object({
-  x: z.number().min(0).max(100),
-  y: z.number().min(0).max(100),
-  zoom: z.number().min(0.1).max(3),
-});
 export const imageSchema = z.object({
   src: mediaUrl.refine((v) => v.length > 0, "Choose an image"),
   alt: z.string().max(300),
@@ -146,6 +143,7 @@ export const promotionSchema = z
     enabled: z.boolean(),
     placement: z.enum(["strip", "home", "shop"]),
     style: promotionStyleSchema.optional(),
+    imageFraming: imageFramingSchema.optional(),
     title: z.string().min(1).max(160),
     body: z.string().max(500),
     button: z.string().max(60),
