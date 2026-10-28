@@ -81,3 +81,5 @@ Promotions support up to twelve announcement strips, homepage banners or shop ba
 Save draft keeps edits private. Preview page opens the actual page layout in a desktop/mobile iframe after administrator verification. Publish content updates public content; restore previous publication swaps back to the prior publication. Drafts and prior versions require administrator access. Optimistic revision checks reject conflicting saves with HTTP 409. Reload saved draft discards unsaved local edits. Content uses a separate website-content record in the existing settings table, with no SQL migration. All existing administrators have access; there is no separate content-editor role.
 
 Local source changes only: no GitHub push, deployment, or production content/database writes were performed for this feature.
+
+Promotional banner previews now share the storefront renderer and include desktop/mobile widths. Full banner images fit without cropping; announcement strips remain text-only. Each promotion can customize text size, alignment, background/text colours, and solid or outlined button colours. Existing saved promotions remain compatible.

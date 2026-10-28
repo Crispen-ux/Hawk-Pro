@@ -82,3 +82,41 @@ it("shows save failures while retaining the local draft", async () => {
     "My new speaker image",
   );
 });
+
+it("saves custom banner appearance with the draft", async () => {
+  setup();
+  await screen.findByText("Make it your own.");
+  fireEvent.click(screen.getByRole("button", { name: "promotions" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add promotion" }));
+  fireEvent.change(screen.getByRole("combobox", { name: "Text size" }), {
+    target: { value: "large" },
+  });
+  fireEvent.change(screen.getByRole("combobox", { name: "Text alignment" }), {
+    target: { value: "right" },
+  });
+  fireEvent.change(screen.getByLabelText("Background colour"), {
+    target: { value: "#112233" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save draft" }));
+  await waitFor(() =>
+    expect(request).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        body: expect.objectContaining({
+          action: "save",
+          content: expect.objectContaining({
+            promotions: [
+              expect.objectContaining({
+                style: expect.objectContaining({
+                  textSize: "large",
+                  alignment: "right",
+                  background: "#112233",
+                }),
+              }),
+            ],
+          }),
+        }),
+      }),
+    ),
+  );
+});

@@ -119,11 +119,33 @@ const date = z
       !v || (!Number.isNaN(Date.parse(v)) && /(?:Z|[+-]\d{2}:\d{2})$/.test(v)),
     "Use a date with timezone",
   );
+export const promotionStyleSchema = z.object({
+  textSize: z.enum(["small", "medium", "large"]),
+  alignment: z.enum(["left", "center", "right"]),
+  background: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  text: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  buttonBackground: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  buttonText: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  buttonStyle: z.enum(["solid", "outline"]),
+});
+export type PromotionStyle = z.infer<typeof promotionStyleSchema>;
+export function defaultPromotionStyle(strip = false): PromotionStyle {
+  return {
+    textSize: "medium",
+    alignment: strip ? "center" : "left",
+    background: strip ? "#f97316" : "#171717",
+    text: strip ? "#171717" : "#ffffff",
+    buttonBackground: strip ? "#171717" : "#f97316",
+    buttonText: strip ? "#ffffff" : "#171717",
+    buttonStyle: "solid",
+  };
+}
 export const promotionSchema = z
   .object({
     id: z.string().min(1).max(100),
     enabled: z.boolean(),
     placement: z.enum(["strip", "home", "shop"]),
+    style: promotionStyleSchema.optional(),
     title: z.string().min(1).max(160),
     body: z.string().max(500),
     button: z.string().max(60),

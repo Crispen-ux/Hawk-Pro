@@ -1,3 +1,5 @@
+import PromotionStyleFields from "./promotion-style-fields";
+import PromotionPreview from "./promotion-preview";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -486,7 +488,16 @@ export default function WebsiteContentEditor() {
                     </select>
                   </label>
                   {field("Headline", p.title, (v) => update({ title: v }))}
-                  {field("Description", p.body, (v) => update({ body: v }))}
+                  <label className="grid gap-2 text-sm">
+                    Description
+                    <textarea
+                      className={inputClass}
+                      rows={3}
+                      maxLength={500}
+                      value={p.body}
+                      onChange={(e) => update({ body: e.target.value })}
+                    />
+                  </label>
                   {field("Button text", p.button, (v) => update({ button: v }))}
                   {field("Button destination", p.href, (v) =>
                     update({ href: v }),
@@ -545,21 +556,11 @@ export default function WebsiteContentEditor() {
                       ),
                     )}
                   </div>
-                  <div className="border bg-muted p-5">
-                    <p className="text-xs uppercase text-muted-foreground">
-                      Banner preview
-                    </p>
-                    {p.image ? (
-                      <img
-                        src={p.image}
-                        alt=""
-                        className="mt-3 max-h-48 w-full object-cover"
-                      />
-                    ) : null}
-                    <h3 className="mt-3 font-semibold">{p.title}</h3>
-                    <p>{p.body}</p>
-                    <span className="underline">{p.button}</span>
-                  </div>
+                  <PromotionStyleFields
+                    promotion={p}
+                    onChange={(style) => update({ style })}
+                  />
+                  <PromotionPreview promotion={p} />
                   <Button
                     variant="outline"
                     onClick={() =>
