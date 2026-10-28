@@ -5,7 +5,11 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { ContentPreview, useWebsiteContent } from "@/hooks/use-website-content";
+import {
+  ContentPreview,
+  useWebsiteContent,
+  useWebsiteContentState,
+} from "@/hooks/use-website-content";
 import type {
   Slot,
   ContentImage as ImageValue,
@@ -105,8 +109,17 @@ export default function ContentImage({
   className?: string;
   priority?: boolean;
 }) {
-  const content = useWebsiteContent();
+  const { content, ready, error } = useWebsiteContentState();
   const preview = useContext(ContentPreview);
+  if (!ready)
+    return (
+      <div
+        className={"overflow-hidden bg-muted " + (className ?? "")}
+        aria-busy={!error}
+        role="img"
+        aria-label={error ? "Image unavailable" : "Loading image"}
+      />
+    );
   return (
     <FramedImage
       image={content.images[slot]}

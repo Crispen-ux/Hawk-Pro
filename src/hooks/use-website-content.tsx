@@ -6,7 +6,7 @@ export const ContentPreview = createContext<{
   content: WebsiteContent;
   mobile?: boolean;
 } | null>(null);
-export function useWebsiteContent() {
+export function useWebsiteContentState() {
   const preview = useContext(ContentPreview);
   const query = useQuery({
     queryKey: ["website-content"],
@@ -18,5 +18,13 @@ export function useWebsiteContent() {
     refetchOnWindowFocus: true,
     enabled: !preview,
   });
-  return preview?.content ?? query.data?.content ?? DEFAULT_CONTENT;
+  return {
+    content: preview?.content ?? query.data?.content ?? DEFAULT_CONTENT,
+    ready: !!preview || !!query.data,
+    error: !preview && query.isError,
+  };
+}
+
+export function useWebsiteContent() {
+  return useWebsiteContentState().content;
 }

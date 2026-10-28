@@ -1,3 +1,4 @@
+import { HERO_CONTENT_CLASS } from "@/components/hero-layout";
 import StoreContact from "@/components/layout/store-contact";
 import RepairForm from "./_components/repair-form.tsx";
 import ContentImage, { ContentOverlay } from "@/components/content-image";
@@ -12,17 +13,19 @@ export default function RepairsPage() {
           priority
         />
         <ContentOverlay slot="repairs-hero" />
-        <div className="mx-auto max-w-7xl space-y-4 px-4 py-24 lg:px-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
-            Repairs and servicing
-          </p>
-          <h1 className="max-w-2xl text-balance font-serif text-6xl font-extrabold uppercase leading-none">
-            Get your speakers back to work.
-          </h1>
-          <p className="max-w-xl text-muted-foreground">
-            Diagnostics, repairs and maintenance for speakers and audio
-            equipment.
-          </p>
+        <div className={HERO_CONTENT_CLASS}>
+          <div className="w-full space-y-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
+              Repairs and servicing
+            </p>
+            <h1 className="max-w-2xl text-balance font-serif text-6xl font-extrabold uppercase leading-none">
+              Get your speakers back to work.
+            </h1>
+            <p className="max-w-xl text-muted-foreground">
+              Diagnostics, repairs and maintenance for speakers and audio
+              equipment.
+            </p>
+          </div>
         </div>
       </section>
       <section

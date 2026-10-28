@@ -1,3 +1,4 @@
+import { HERO_CONTENT_CLASS } from "@/components/hero-layout";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button.tsx";
@@ -14,7 +15,7 @@ export default function Hero() {
         priority
       />
       <ContentOverlay slot="home-hero" />
-      <div className="mx-auto flex min-h-[78vh] max-w-7xl items-center px-4 py-20 lg:px-8">
+      <div className={HERO_CONTENT_CLASS}>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
