@@ -69,3 +69,15 @@ The root TypeScript configuration is also used by the Vercel function builder. I
 ## Batch product images
 
 The product editor accepts multiple image files at once through the file picker or drag-and-drop area. The existing limit remains eight images per product and 4 MB per JPEG, PNG or WebP file. A sequential queue keeps gallery order stable, reports each result, retains successful uploads and allows failed uploads to be retried individually. The product cannot be saved while a batch is running. Save changes after upload to persist the gallery. Each file uses the existing authenticated /api/upload endpoint and its server-side validation.
+
+## Website content and promotions
+
+Open Store settings → Manage website content, or /admin/settings/content. Eleven fixed image positions cover Home (eight), Rentals hero, Repairs hero and About main image. Replace an image, drag to reposition, adjust zoom (100–300%), and save independent desktop/mobile crops. Cropping retains the full processed image. Images are resized to a maximum 2400 px and compressed to WebP before the existing authenticated upload (4 MB maximum); choose an original up to 25 MB. The draft media library retains up to 100 reusable uploaded images.
+
+The homepage hero heading, description and primary button are editable. Hero overlay controls adjust readability. CNC footage uses a direct HTTPS MP4/WebM URL, optional uploaded poster, heading, description and visibility switch; the same player appears on Home and About, with controls and no autoplay. Large video files must be hosted separately; this release does not upload video files.
+
+Promotions support up to twelve announcement strips, homepage banners or shop banners with optional images and links. Start/end inputs use South African time (UTC+02:00), independent of the operator's computer timezone. Enabled banners appear at their start and disappear at their end. Banners advertise offers only; they do not change prices or apply checkout discounts.
+
+Save draft keeps edits private. Preview page opens the actual page layout in a desktop/mobile iframe after administrator verification. Publish content updates public content; restore previous publication swaps back to the prior publication. Drafts and prior versions require administrator access. Optimistic revision checks reject conflicting saves with HTTP 409. Reload saved draft discards unsaved local edits. Content uses a separate website-content record in the existing settings table, with no SQL migration. All existing administrators have access; there is no separate content-editor role.
+
+Local source changes only: no GitHub push, deployment, or production content/database writes were performed for this feature.

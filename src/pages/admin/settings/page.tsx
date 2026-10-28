@@ -80,6 +80,19 @@ export default function AdminSettings() {
           </Link>
         </Button>
       </header>
+      <section className="admin-panel flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2>Website content</h2>
+          <p className="text-muted-foreground">
+            Page images, zoom and crop, CNC footage and promotional banners.
+          </p>
+        </div>
+        <Button asChild>
+          <Link to="/admin/settings/content">
+            Manage website content <ArrowRight size={16} />
+          </Link>
+        </Button>
+      </section>
       <div className="grid lg:grid-cols-[1.5fr_1fr] gap-7 items-start">
         <Form {...form}>
           <form

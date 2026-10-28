@@ -210,3 +210,20 @@
 .admin-brand-panel p {
   color: inherit;
 }
+
+.content-image > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--frame-x) var(--frame-y);
+  transform-origin: var(--frame-x) var(--frame-y);
+  transform: scale(var(--frame-z));
+  display: block;
+}
+@media (max-width: 767px) {
+  .content-image > img {
+    object-position: var(--mobile-x) var(--mobile-y);
+    transform-origin: var(--mobile-x) var(--mobile-y);
+    transform: scale(var(--mobile-z));
+  }
+}

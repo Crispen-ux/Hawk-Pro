@@ -1,3 +1,6 @@
+import { z } from "zod";
+import { contentSchema } from "../db/website-content.ts";
+import { getContentState, changeContent } from "../db/website-content-store.ts";
 import { getSettings, saveSettings } from "../db/settings.ts";
 import {
   getDocumentPayments,
@@ -11,6 +14,51 @@ import { parseBody, requireAdmin, sendJson, withErrors } from "./_lib/http.ts";
 // PUT /api/settings   save them (admin)
 export default withErrors(async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
+  if (
+    new URL(req.url ?? "/", "http://localhost").searchParams.get("section") ===
+    "website-content"
+  ) {
+    const admin =
+      new URL(req.url ?? "/", "http://localhost").searchParams.get("admin") ===
+      "1";
+    if (req.method === "GET" && !admin) {
+      const state = await getContentState();
+      sendJson(res, 200, { content: state.published });
+      return;
+    }
+    if (!(await requireAdmin(req, res))) return;
+    if (req.method === "GET") {
+      sendJson(res, 200, await getContentState());
+      return;
+    }
+    if (req.method === "PUT") {
+      const body = await parseBody(
+        req,
+        res,
+        z.object({
+          action: z.enum(["save", "publish", "restore"]),
+          content: contentSchema,
+          revision: z.number().int().min(0),
+        }),
+      );
+      if (!body) return;
+      const state = await changeContent(
+        body.action,
+        body.content,
+        body.revision,
+      );
+      if (!state) {
+        sendJson(res, 409, {
+          error: "Content changed in another session. Reload before saving.",
+        });
+        return;
+      }
+      sendJson(res, 200, state);
+      return;
+    }
+    sendJson(res, 405, { error: "Method not allowed" });
+    return;
+  }
   if (
     new URL(req.url ?? "/", "http://localhost").searchParams.get("section") ===
     "document-payments"

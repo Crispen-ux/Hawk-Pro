@@ -13,7 +13,8 @@ import { Skeleton } from "@/components/ui/skeleton.tsx";
 import ProductCard from "@/components/shop/product-card.tsx";
 import { CATEGORIES } from "@/data/products.ts";
 import { useCatalogue } from "@/hooks/use-catalogue.tsx";
-import { IMAGES, unsplash } from "@/data/site.ts";
+import ContentImage from "@/components/content-image";
+import type { Slot } from "../../../db/website-content";
 
 export function SectionHeading({
   eyebrow,
@@ -96,11 +97,9 @@ export function CategoriesSection() {
               to={`/shop?category=${c.id}`}
               className={`group relative block overflow-hidden ${i === 0 ? "aspect-[4/5] md:aspect-auto md:h-full md:min-h-[640px]" : "aspect-[4/3]"}`}
             >
-              <img
-                src={c.image}
-                alt=""
-                loading="lazy"
-                className="absolute inset-0 size-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+              <ContentImage
+                slot={("category-" + c.id) as Slot}
+                className="absolute inset-0 size-full"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
               <span className="absolute left-6 top-6 text-xs font-semibold tracking-[0.3em] text-white/80">
@@ -179,12 +178,7 @@ export function FeaturedProducts() {
 export function StorySection() {
   return (
     <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 lg:grid-cols-2 lg:px-8">
-      <img
-        src={unsplash(IMAGES.mesh, 1000)}
-        alt="Close-up of a speaker grille"
-        loading="lazy"
-        className="aspect-[4/3] w-full object-cover"
-      />
+      <ContentImage slot="home-brand" className="aspect-[4/3] w-full" />
       <div className="space-y-5">
         <SectionHeading eyebrow="The brand" title="Engineered with purpose." />
         <p className="text-muted-foreground">
@@ -206,7 +200,6 @@ export function StorySection() {
 
 export function ServicePanel({
   id,
-  image,
   eyebrow,
   title,
   body,
@@ -215,7 +208,6 @@ export function ServicePanel({
   flip,
 }: {
   id: string;
-  image: string;
   eyebrow: string;
   title: string;
   body: string;
@@ -233,11 +225,9 @@ export function ServicePanel({
             <Link to={to}>{cta}</Link>
           </Button>
         </div>
-        <img
-          src={image}
-          alt=""
-          loading="lazy"
-          className="aspect-[4/3] w-full object-cover"
+        <ContentImage
+          slot={id === "rentals" ? "home-rentals" : "home-repairs"}
+          className="aspect-[4/3] w-full"
         />
       </div>
     </section>

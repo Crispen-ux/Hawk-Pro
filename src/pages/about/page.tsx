@@ -2,7 +2,7 @@ import StoreContact from "@/components/layout/store-contact";
 import { Link } from "react-router-dom";
 import CraftVideo from "@/components/craft-video.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { IMAGES, unsplash } from "@/data/site.ts";
+import ContentImage from "@/components/content-image";
 
 export default function AboutPage() {
   return (
@@ -20,11 +20,7 @@ export default function AboutPage() {
           products, alongside equipment rentals and speaker repairs.
         </p>
       </header>
-      <img
-        src={unsplash(IMAGES.speakerB, 1600)}
-        alt=""
-        className="aspect-[21/9] w-full object-cover"
-      />
+      <ContentImage slot="about-main" className="aspect-[21/9] w-full" />
       <p className="max-w-3xl text-muted-foreground">
         More about our story, team and manufacturing approach will be added here
         once verified information is provided.

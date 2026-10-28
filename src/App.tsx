@@ -1,3 +1,5 @@
+const ContentPagePreview = lazy(() => import("./pages/admin/content/preview"));
+const WebsiteContentEditor = lazy(() => import("./pages/admin/content/page"));
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { DefaultProviders } from "./components/providers/default.tsx";
@@ -75,6 +77,10 @@ export default function App() {
             />
             <Route path="/account" element={<CustomerAccount />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route
+              path="/admin/content-preview"
+              element={<ContentPagePreview />}
+            />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route
               path="/admin/reset-password"
@@ -88,6 +94,10 @@ export default function App() {
               <Route path="products/:id" element={<AdminProductEditor />} />
               <Route path="enquiries" element={<AdminEnquiries />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route
+                path="settings/content"
+                element={<WebsiteContentEditor />}
+              />
               <Route path="onboarding" element={<StoreOnboarding />} />
               <Route path="orders" element={<CommercePage kind="orders" />} />
               <Route

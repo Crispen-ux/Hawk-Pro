@@ -1,3 +1,4 @@
+import Promotions from "@/components/promotions";
 import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "./header.tsx";
@@ -24,6 +25,7 @@ export default function SiteLayout() {
         Skip to content
       </a>
       <Header />
+      <Promotions />
       <main id="main" className="flex-1">
         <Outlet />
       </main>

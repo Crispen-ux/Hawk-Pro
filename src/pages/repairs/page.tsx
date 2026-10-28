@@ -1,17 +1,17 @@
 import StoreContact from "@/components/layout/store-contact";
 import RepairForm from "./_components/repair-form.tsx";
-import { IMAGES, unsplash } from "@/data/site.ts";
+import ContentImage, { ContentOverlay } from "@/components/content-image";
 
 export default function RepairsPage() {
   return (
     <>
       <section className="relative isolate overflow-hidden border-b">
-        <img
-          src={unsplash(IMAGES.solder, 1800)}
-          alt=""
-          className="absolute inset-0 -z-20 size-full object-cover"
+        <ContentImage
+          slot="repairs-hero"
+          className="absolute inset-0 -z-20 size-full"
+          priority
         />
-        <div className="absolute inset-0 -z-10 bg-background/80" />
+        <ContentOverlay slot="repairs-hero" />
         <div className="mx-auto max-w-7xl space-y-4 px-4 py-24 lg:px-8">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
             Repairs and servicing
